@@ -174,6 +174,8 @@ void IEC62065::stateRxFinished()
 		break;
 	}
 
+	m_strDataBuffer = "";
+
 	if (!okReceived)
 		updateState(RX_ERROR);
 }
