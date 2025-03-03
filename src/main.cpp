@@ -1,11 +1,12 @@
 #include <Arduino.h>
-#include <esp_task_wdt.h>
 //#include <WiFiManager.h>
 #include <WiFi.h>
 
 #include "components/heartbeat.hpp"
+#include "components/watchdog.hpp"
 #include "components/timer.hpp"
 #include "httpapi.hpp"
+#include "iec62056.hpp"
 
 #include "../secrets/wifi.h"
 
@@ -18,6 +19,9 @@ wl_status_t wifiLastState = WL_DISCONNECTED;
 const char* HOSTNAME = "ESP32-SmartMeter";
 
 Heartbeat hb(1000, PIN_LED, true);
+Watchdog wd;
+
+IEC62065 iec62056(Serial1, 5000, PIN_RX, PIN_TX);
 HttpAPI api(80);
 
 Timer timerWifi;
@@ -87,9 +91,9 @@ void setup()
 	hb.init();
 	hb.start();
 
-	Serial.begin(9600);											// Serial over USB for Terminal
-	Serial1.begin(300, SERIAL_7E1, PIN_RX, PIN_TX, true);		// Hardware Serial for IR-Interface
+	Serial.begin(9600);
 
+	iec62056.init();
 	api.init();
 
 	// TODO: Start in AP-Mode and let User enter SSID and password
@@ -101,13 +105,7 @@ void setup()
 	timerWifi.start();
 
 	// Watchdog
-	esp_task_wdt_config_t wdtConfig;
-	wdtConfig.timeout_ms = 3000;
-	wdtConfig.idle_core_mask = 0;
-	wdtConfig.trigger_panic = true;
-	esp_task_wdt_init(&wdtConfig);
-	esp_task_wdt_add(nullptr);
-	esp_task_wdt_reset();
+	wd.init();
 }
 
 void loop()
@@ -117,9 +115,12 @@ void loop()
 	const unsigned long timeNow = millis();
 
 	// Reset Watchdog
-	esp_task_wdt_reset();
+	wd.update();
 
 	hb.update();
-	timerWifi.update();
+
+	iec62056.update();
 	api.update();
+
+	timerWifi.update();
 }

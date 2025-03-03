@@ -21,6 +21,8 @@ public:
 
 	void update();
 
+	bool isRunning() { return m_started; }
+
 private:
 	bool m_started = false;
 	callback_fc m_callback;
