@@ -22,7 +22,9 @@ Heartbeat hb(1000, PIN_LED, true);
 Watchdog wd;
 
 IEC62065 iec62056(Serial1, 5000, PIN_RX, PIN_TX);
-HttpAPI api(80);
+
+DataCollector dc(iec62056);
+HttpAPI api(dc, 80);
 
 Timer timerWifi;
 
@@ -48,15 +50,15 @@ void checkWifi()
 	{
 		wl_status_t wifiState = WiFi.status();
 
-		Serial.print("WiFi Status: ");
-		Serial.print(wifiState);
+		//Serial.print("WiFi Status: ");
+		//Serial.print(wifiState);
 
 		if (wifiState == WL_CONNECTED)
 		{
 			const int32_t rssi = WiFi.RSSI();
 
-			Serial.print(" RSSI: ");
-			Serial.print(rssi);
+			//Serial.print(" RSSI: ");
+			//Serial.print(rssi);
 
 			if (wifiLastState != wifiState)
 			{
@@ -75,7 +77,7 @@ void checkWifi()
 		{
 			api.stop();
 
-			Serial.print(" --- WiFi reconnecting ---");
+			//Serial.print(" --- WiFi reconnecting ---");
 			WiFi.reconnect();
 		}
 
@@ -94,6 +96,8 @@ void setup()
 	Serial.begin(9600);
 
 	iec62056.init();
+	iec62056.start();
+
 	api.init();
 
 	// TODO: Start in AP-Mode and let User enter SSID and password

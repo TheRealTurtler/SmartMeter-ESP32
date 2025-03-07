@@ -1,7 +1,7 @@
 #include "iec62056.hpp"
 
 const char C_ACK = 0x06;
-const char C_NACK = 0x15;
+const char C_NAK = 0x15;
 const char C_STX = 0x02;
 const char C_SOH = 0x01;
 const char C_ETX = 0x03;
@@ -13,12 +13,8 @@ IEC62065::IEC62065(HardwareSerial& serial, unsigned long interval_ms, uint8_t pi
 	m_pinRx(pinRx),
 	m_pinTx(pinTx)
 {
-	auto cbUpdate = [this]() { this->callbackUpdate(); };
 	auto cbPause = [this]() { this->callbackPause(); };
 	auto cbTimeout = [this]() { this->callbackTimeout(); };
-
-	m_timerUpdate.setCallback(cbUpdate);
-	m_timerUpdate.setInterval_ms(interval_ms);
 
 	m_timerPause.setCallback(cbPause);
 	m_timerPause.setInterval_ms(1000);
@@ -34,26 +30,45 @@ IEC62065::~IEC62065()
 
 void IEC62065::init()
 {
-
+	m_serial.begin(9600, SERIAL_8N1, m_pinRx, m_pinTx, true);
 }
 
 void IEC62065::start()
 {
-	m_timerUpdate.start();
+	m_started = true;
 }
 
 void IEC62065::stop()
 {
-	m_timerUpdate.stop();
 	m_timerPause.stop();
 	m_timerTimeout.stop();
+
+	m_started = false;
 }
 
 void IEC62065::update()
 {
-	m_timerUpdate.update();
-	m_timerPause.update();
-	m_timerTimeout.update();
+	if (!m_started)
+		return;
+
+	while (m_serial.available())
+	{
+		const int received = m_serial.read();
+
+		if (received >= 0)
+		{
+			const char c = received & 0xff;
+			char buffer[3] = { 0 };
+			sprintf(buffer, "%02x", received);
+
+			Serial.print(buffer);
+		}
+	}
+
+	//m_timerPause.update();
+	//m_timerTimeout.update();
+
+	//runStateMachine();
 }
 
 void IEC62065::updateState(STATE state)
@@ -66,7 +81,7 @@ void IEC62065::updateStateTx(STATE state)
 	m_stateTx = state;
 }
 
-void IEC62065::callbackUpdate()
+void IEC62065::runStateMachine()
 {
 	switch (m_state)
 	{
@@ -84,6 +99,10 @@ void IEC62065::callbackUpdate()
 
 	case RX_FINISHED:
 		stateRxFinished();
+		break;
+
+	case RX_ERROR:
+		stateRxError();
 		break;
 
 	case TX_INIT:
@@ -129,6 +148,8 @@ void IEC62065::stateRxActive()
 
 		if (received >= 0)
 		{
+			Serial.print((char)received);
+
 			m_timerTimeout.start();
 			m_strDataBuffer.push_back(received & 0xff);
 		}
@@ -145,7 +166,7 @@ void IEC62065::stateRxTimeout()
 {
 	updateState(PAUSE);
 
-	Serial.println("Timeout! -> Re-Initialising...");
+	//Serial.println("Timeout! -> Re-Initialising...");
 }
 
 void IEC62065::stateRxFinished()
@@ -174,8 +195,6 @@ void IEC62065::stateRxFinished()
 		break;
 	}
 
-	m_strDataBuffer = "";
-
 	if (!okReceived)
 		updateState(RX_ERROR);
 }
@@ -185,7 +204,7 @@ void IEC62065::stateRxError()
 	updateState(PAUSE);
 
 	Serial.print("Error! Received: ");
-	Serial.print(m_strDataBuffer.data());
+	Serial.print(m_strDataBuffer.c_str());
 	Serial.println();
 }
 
@@ -221,20 +240,22 @@ void IEC62065::stateTxReadout()
 
 void IEC62065::sendRequest()
 {
+	Serial.println("Sending Request...");
+
 	m_serial.write("/?!\r\n");
 }
 
-void IEC62065::sendAck(char v, char z, char y)
+void IEC62065::sendAck(char idProtocol, char idBaud, char idMode)
 {
 	size_t idx = 0;
 
 	char buffer[7];
-	buffer[idx++] = C_ACK;	// ACK
-	buffer[idx++] = v;		// Protocol Control
-	buffer[idx++] = z;		// Baud Rate Identification
-	buffer[idx++] = y;		// Mode Control
-	buffer[idx++] = '\r';	// CR
-	buffer[idx++] = '\n';	// LF
+	buffer[idx++] = C_ACK;		// ACK
+	buffer[idx++] = idProtocol;	// Protocol Control
+	buffer[idx++] = idBaud;		// Baud Rate Identification
+	buffer[idx++] = idMode;		// Mode Control
+	buffer[idx++] = '\r';		// CR
+	buffer[idx++] = '\n';		// LF
 	buffer[idx++] = 0x00;
 
 	m_serial.write(buffer);
@@ -245,32 +266,34 @@ void IEC62065::sendAck()
 	m_serial.write(C_ACK);
 }
 
-void IEC62065::sendNack()
+void IEC62065::sendNak()
 {
-	m_serial.write(C_NACK);
+	m_serial.write(C_NAK);
 }
 
-void IEC62065::sendProgrammingCommand(char c, char d, char* data)
+void IEC62065::sendProgrammingCommand(char cmdMsg, char cmdType, char* data)
 {
 	char bcc = 0;	// TODO
 
 	size_t idx = 0;
 
-	char buffer[7];			// TODO
-	buffer[idx++] = C_SOH;	// Start of Header
-	buffer[idx++] = c;		// Command Message
-	buffer[idx++] = d;		// Command Type
-	buffer[idx++] = C_STX;	// Frame Start
+	char buffer[7];				// TODO
+	buffer[idx++] = C_SOH;		// Start of Header
+	buffer[idx++] = cmdMsg;		// Command Message
+	buffer[idx++] = cmdType;	// Command Type
+	buffer[idx++] = C_STX;		// Frame Start
 
 	// TODO: Data
 
-	buffer[idx++] = C_ETX;	// End
-	buffer[idx++] = bcc;	// Block Check
+	buffer[idx++] = C_ETX;		// End
+	buffer[idx++] = bcc;		// Block Check
 	buffer[idx++] = 0x00;
 }
 
 void IEC62065::sendReadout(int baud)
 {
+	Serial.println("Sending Readout...");
+
 	const int factor = baud / 300 - 1;
 
 	if (factor < 0 || factor > 6)
@@ -280,11 +303,11 @@ void IEC62065::sendReadout(int baud)
 		Serial.println();
 	}
 
-	char v = '0';
-	char z = '0' + factor;
-	char y = '0';
+	char idProtocol = '0';
+	char idBaud = '0' + factor;
+	char idMode = '0';
 
-	sendAck(v, z, y);
+	sendAck(idProtocol, idBaud, idMode);
 }
 
 bool IEC62065::decodeInit()
@@ -300,15 +323,20 @@ bool IEC62065::decodeInit()
 	if (m_strDataBuffer.starts_with("/") && m_strDataBuffer.ends_with("\r\n"))
 	{
 		std::string strManuf = m_strDataBuffer.substr(1, 3);
-		std::string strId = m_strDataBuffer.substr(5, m_strDataBuffer.size() - 7);
+		std::string strIdent = m_strDataBuffer.substr(5, m_strDataBuffer.size() - 7);
 
-		if (strId.starts_with("\\"))
-			strId = strId.substr(2);
+		if (strIdent.starts_with("\\"))
+			strIdent = strIdent.substr(2);
 
-		if (!strManuf.empty() && !strId.empty())
+		if (!strManuf.empty() && !strIdent.empty())
 		{
-			m_strManufactor = std::move(strManuf);
-			m_strIdentifier = std::move(strId);
+			Serial.print("Manufacturer: ");
+			Serial.print(strManuf.c_str());
+			Serial.print(" | Identifier: ");
+			Serial.print(strIdent.c_str());
+
+			m_strManufacturer = std::move(strManuf);
+			m_strIdentifier = std::move(strIdent);
 			result = true;
 		}
 	}
@@ -334,6 +362,18 @@ bool IEC62065::decodeReadout()
 		{
 			m_strDataRaw = std::move(strDataRaw);
 			result = true;
+
+			Serial.println("---------- DATA START ----------");
+			Serial.println(strDataRaw.c_str());
+			Serial.println("----------- DATA END -----------");
+		}
+		else
+		{
+			Serial.print("BCC invalid! Received: ");
+			Serial.print((int)bccReceived);
+			Serial.print(" Calculated: ");
+			Serial.print((int)bccCalculated);
+			Serial.println();
 		}
 	}
 

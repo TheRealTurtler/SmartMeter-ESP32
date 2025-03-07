@@ -1,9 +1,14 @@
+#pragma once
+
 #include <WebServer.h>
+
+#include "datacollector.hpp"
+
 
 class HttpAPI
 {
 public:
-	HttpAPI(uint16_t port = 80);
+	HttpAPI(const DataCollector& dc, uint16_t port = 80);
 	~HttpAPI() = default;
 
 	void init();
@@ -14,8 +19,12 @@ public:
 private:
 	WebServer m_server;
 
+	const DataCollector& m_dc;
+
 	void getHome();
 	void getPing();
 	void getStatus();
-	void getRaw();
+
+	void getSmartmeter();
+	void getSmartmeterRaw();
 };
