@@ -6,7 +6,7 @@
 #include "components/watchdog.hpp"
 #include "components/timer.hpp"
 #include "httpapi.hpp"
-#include "iec62056.hpp"
+#include "smlreader.hpp"
 
 #include "../secrets/wifi.h"
 
@@ -19,9 +19,10 @@ wl_status_t wifiLastState = WL_DISCONNECTED;
 const char* HOSTNAME = "ESP32-SmartMeter";
 
 Heartbeat hb(1000, PIN_LED, true);
-Watchdog wd;
+Watchdog wd(3000);
 
 IEC62065 iec62056(Serial1, 5000, PIN_RX, PIN_TX);
+SMLReader sml(Serial1, PIN_RX, PIN_TX);
 
 DataCollector dc(iec62056);
 HttpAPI api(dc, 80);
@@ -81,7 +82,7 @@ void checkWifi()
 			WiFi.reconnect();
 		}
 
-		Serial.println();
+		//Serial.println();
 
 		wifiLastState = wifiState;
 	}
@@ -93,14 +94,13 @@ void setup()
 	hb.init();
 	hb.start();
 
+	// TODO Debug output
 	Serial.begin(9600);
 
-	iec62056.init();
-	iec62056.start();
-
+	sml.init();
 	api.init();
 
-	// TODO: Start in AP-Mode and let User enter SSID and password
+	// TODO Start in AP-Mode and let User enter SSID and password
 	WiFi.setHostname(HOSTNAME);
 	WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
 
@@ -114,17 +114,21 @@ void setup()
 
 void loop()
 {
-	// TODO: CPU-Usage
-	// -> 100% = Watchdog Timeout
-	const unsigned long timeNow = millis();
+	static unsigned long timeLast = micros();
 
-	// Reset Watchdog
-	wd.update();
+	const unsigned long timeNow = micros();
+	const unsigned long timeDiff = (timeNow - timeLast);
+	timeLast = timeNow;
 
-	hb.update();
+	// MCU Usage calculated from last loop time and Watchdog timeout
+	// -> 100% means that the loop() takes as long as the Watchdog timeout, which would cause a reset
+	const float mcuUsage = (100.0f * timeDiff) / (wd.getTimeout() * 1000.0f);
 
-	iec62056.update();
-	api.update();
+	wd.update();		// Watchdog
+	hb.update();		// Heartbeat
+
+	sml.update();		// SML Reader
+	api.update(); 		// HTTP API
 
 	timerWifi.update();
 }

@@ -4,11 +4,17 @@
 #include <esp_task_wdt.h>
 #endif
 
+Watchdog::Watchdog(uint32_t timeoutMs):
+	m_timeoutMs(timeoutMs)
+{
+
+}
+
 void Watchdog::init()
 {
 #ifdef ESP32
 	esp_task_wdt_config_t wdtConfig;
-	wdtConfig.timeout_ms = 3000;
+	wdtConfig.timeout_ms = m_timeoutMs;
 	wdtConfig.idle_core_mask = 0;
 	wdtConfig.trigger_panic = true;
 	esp_task_wdt_init(&wdtConfig);
