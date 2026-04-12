@@ -101,9 +101,9 @@ void DataCollector::update()
 	}
 }
 
-void DataCollector::updateDatapoint(const DATA_POINT dp, const double& value)
+void DataCollector::updateDatapoint(const DATA_POINT dp, const double& value, bool calcAverage)
 {
-	m_mapDataPoints[dp].updateValue(value);
+	m_mapDataPoints[dp].updateValue(value, calcAverage);
 }
 
 void DataCollector::calcDerivedValues()

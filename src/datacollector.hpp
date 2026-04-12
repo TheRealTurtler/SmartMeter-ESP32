@@ -65,7 +65,7 @@ public:
 
 	void update();
 
-	void updateDatapoint(const DATA_POINT dp, const double& value);
+	void updateDatapoint(const DATA_POINT dp, const double& value, bool calcAverage = true);
 	void calcDerivedValues();
 
 	void resetAverages();

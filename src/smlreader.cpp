@@ -130,7 +130,12 @@ bool SMLReader::readByte(unsigned char byte)
 		{
 			for (const auto& [dp, value] : m_mapValues)
 			{
-				m_dc->updateDatapoint(dp, value);
+				bool calcAvg = true;
+
+				if (dp == DP_ACTIVE_ENERGY_IMPORT || dp == DP_ACTIVE_ENERGY_EXPORT)
+					calcAvg = false;
+
+				m_dc->updateDatapoint(dp, value, calcAvg);
 			}
 
 			m_dc->calcDerivedValues();
