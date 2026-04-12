@@ -5,7 +5,7 @@
 #include "components/heartbeat.hpp"
 #include "components/watchdog.hpp"
 #include "components/timer.hpp"
-#include "httpapi.hpp"
+#include "web/server/httpserver.hpp"
 #include "smlreader.hpp"
 
 #include "../secrets/wifi.h"
@@ -21,7 +21,7 @@ Heartbeat hb(1000, PIN_LED, true);
 
 DataCollector dc;
 SMLReader sml(&dc, Serial1, PIN_RX, PIN_TX);
-HttpAPI api(dc, 80);
+HttpServer server(dc, 80);
 
 // TODO Move to separate file
 Timer timerWifi;
@@ -67,14 +67,14 @@ void checkWifi()
 				Serial.print(" Hostname: ");
 				Serial.print(WiFi.getHostname());
 
-				api.start();
+				server.start();
 			}
 		}
 		else if (wifiState == WL_IDLE_STATUS
 			|| wifiState == WL_STOPPED
 			|| wifiState == WL_CONNECT_FAILED)
 		{
-			api.stop();
+			server.stop();
 
 			//Serial.print(" --- WiFi reconnecting ---");
 			WiFi.reconnect();
@@ -96,7 +96,7 @@ void setup()
 	Serial.begin(9600);
 
 	sml.init();
-	api.init();
+	server.init();
 
 	// TODO Start in AP-Mode and let User enter SSID and password
 	WiFi.setHostname(HOSTNAME);
@@ -132,7 +132,7 @@ void loop()
 
 	sml.update();		// SML Reader
 	dc.update();		// Data Collector (calculate power factor, L-L voltage etc.)
-	api.update(); 		// HTTP API
+	server.update(); 	// HTTP Server
 
 	timerWifi.update();
 }

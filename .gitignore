@@ -30,3 +30,7 @@
 
 
 [Ss]ecrets/*
+
+# Automatically generated files
+# E.g. by convert_html.py
+src/generated/*
