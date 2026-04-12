@@ -11,23 +11,22 @@
 #include "../secrets/wifi.h"
 
 
-constexpr uint8_t PIN_LED = 8;
+constexpr uint8_t PIN_LED_BUILTIN = 8;
+constexpr uint8_t PIN_LED = 6;
 constexpr uint8_t PIN_RX = 20;
 constexpr uint8_t PIN_TX = 21;
 
-wl_status_t wifiLastState = WL_DISCONNECTED;
-const char* HOSTNAME = "ESP32-SmartMeter";
-
-Heartbeat hb(1000, PIN_LED, true);
 Watchdog wd(3000);
-
-SMLReader sml(Serial1, PIN_RX, PIN_TX);
+Heartbeat hb(1000, PIN_LED, true);
 
 DataCollector dc;
+SMLReader sml(&dc, Serial1, PIN_RX, PIN_TX);
 HttpAPI api(dc, 80);
 
+// TODO Move to separate file
 Timer timerWifi;
-
+wl_status_t wifiLastState = WL_DISCONNECTED;
+const char* HOSTNAME = "ESP32-SmartMeter";
 
 void checkWifi()
 {
@@ -123,10 +122,16 @@ void loop()
 	// -> 100% means that the loop() takes as long as the Watchdog timeout, which would cause a reset
 	const float mcuUsage = (100.0f * timeDiff) / (wd.getTimeout() * 1000.0f);
 
+	dc.updateDatapoint(DP_MCU_USAGE, mcuUsage);
+
+	if (WiFi.status() == WL_CONNECTED)
+		dc.updateDatapoint(DP_WIFI_RSSI, WiFi.RSSI());
+
 	wd.update();		// Watchdog
 	hb.update();		// Heartbeat
 
 	sml.update();		// SML Reader
+	dc.update();		// Data Collector (calculate power factor, L-L voltage etc.)
 	api.update(); 		// HTTP API
 
 	timerWifi.update();
