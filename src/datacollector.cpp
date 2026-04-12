@@ -1,7 +1,6 @@
 #include "datacollector.hpp"
 
-DataCollector::DataCollector(const IEC62065& iec):
-	m_iec(iec)
+DataCollector::DataCollector()
 {
 
 }
@@ -16,20 +15,6 @@ std::string DataCollector::getJsonStatus() const
 	// -> etc.
 
 	result = "{\"STATUS\":\"OK\"}";
-
-	return result;
-}
-
-std::string DataCollector::getJsonIEC62065() const
-{
-	std::string result;
-
-	// TODO
-	const std::string strManuf = m_iec.getManufacturer();
-	const std::string strIdent = m_iec.getIdentifier();
-
-	// TODO
-	result = "{}";
 
 	return result;
 }

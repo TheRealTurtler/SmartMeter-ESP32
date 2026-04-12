@@ -21,10 +21,9 @@ const char* HOSTNAME = "ESP32-SmartMeter";
 Heartbeat hb(1000, PIN_LED, true);
 Watchdog wd(3000);
 
-IEC62065 iec62056(Serial1, 5000, PIN_RX, PIN_TX);
 SMLReader sml(Serial1, PIN_RX, PIN_TX);
 
-DataCollector dc(iec62056);
+DataCollector dc;
 HttpAPI api(dc, 80);
 
 Timer timerWifi;

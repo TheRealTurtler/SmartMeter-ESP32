@@ -13,7 +13,6 @@ void HttpAPI::init()
 	m_server.on("/ping", [this]() { this->getPing(); });
 	m_server.on("/status", [this]() { this->getStatus(); });
 	m_server.on("/smartmeter", [this]() { this->getSmartmeter(); });
-	m_server.on("/smartmeter/raw", [this]() { this->getSmartmeterRaw(); });
 }
 
 void HttpAPI::start()
@@ -55,14 +54,7 @@ void HttpAPI::getSmartmeter()
 {
 	Serial.println("GET Smartmeter");
 
-	const std::string strData = m_dc.getJsonIEC62065();
+	// FIXME
+	const std::string strData = m_dc.getJsonStatus();
 	m_server.send(200, "application/json", strData.c_str());
-}
-
-void HttpAPI::getSmartmeterRaw()
-{
-	Serial.println("GET RAW");
-
-	const std::string& strData = m_dc.getRawIEC62065();
-	m_server.send(200, "text/plain", strData.c_str());
 }

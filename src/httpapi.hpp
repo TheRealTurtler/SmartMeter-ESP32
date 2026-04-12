@@ -26,5 +26,4 @@ private:
 	void getStatus();
 
 	void getSmartmeter();
-	void getSmartmeterRaw();
 };
