@@ -68,7 +68,7 @@ void HttpAPI::getSmartmeter()
 		const int64_t timeNow = getUnixTime_us();
 		const int64_t timeLastUpdate = timeNow - tsDelta;
 
-		doc["last_update"] = (timeLastUpdate / 1000000);
+		doc["last_update"] = (timeLastUpdate / 1000);
 
 		for (const auto& [dp, mv] : mapDataPoints)
 		{
@@ -111,7 +111,7 @@ void HttpAPI::getSystem()
 		vecFilter = convertToList(m_server->arg("dp").c_str(), ',');
 
 	doc["status"] = "ok";
-	doc["time"] = getUnixTime_s();
+	doc["time"] = getUnixTime_ms();
 
 	const std::map<DATA_POINT_SYSTEM, MeasuredValue>& mapDataPoints = m_dc.getDataPointsSystem();
 

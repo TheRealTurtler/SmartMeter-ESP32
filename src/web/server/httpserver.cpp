@@ -42,11 +42,15 @@ void HttpServer::getHome()
 {
 	Serial.println("HTTP GET HOME");
 
-	m_server.send(200, "text/html; charset=utf-8", Html::index.c_str());
+	if (Html::isCompressed)
+		m_server.sendHeader("Content-Encoding", "gzip");
+
+	m_server.send_P(200, PSTR("text/html; charset=utf-8"), Html::index, Html::index_len);
 }
 
 void HttpServer::getPing()
 {
 	Serial.println("HTTP GET PING");
+
 	m_server.send(200, "text/plain", "Pong");
 }
