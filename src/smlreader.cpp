@@ -95,6 +95,7 @@ bool SMLReader::readByte(unsigned char byte)
 	{
 	case SML_START:
 		m_mapValues.clear();
+		m_tsLastUpdate = micros();
 		break;
 
 	case SML_LISTEND:
@@ -139,6 +140,7 @@ bool SMLReader::readByte(unsigned char byte)
 			}
 
 			m_dc->calcDerivedValues();
+			m_dc->setTsLastUpdateSmartmeter(m_tsLastUpdate);
 		}
 	}
 

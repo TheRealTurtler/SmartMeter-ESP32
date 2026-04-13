@@ -15,95 +15,100 @@ void DataCollector::update()
 		ctr = 0;
 
 		Serial.print("Samples: ");
-		Serial.println(m_mapDataPoints[DP_ACTIVE_POWER_TOTAL].getSampleCount());
+		Serial.println(m_mapDataPointsSmartmeter[DP_ACTIVE_POWER_TOTAL].getSampleCount());
 
 		Serial.print("MCU Usage: ");
-		Serial.println(m_mapDataPoints[DP_MCU_USAGE].getValueAverage());
+		Serial.println(m_mapDataPointsSystem[DP_MCU_USAGE].getValueAverage());
 		Serial.print("WiFi RSSI: ");
-		Serial.println(m_mapDataPoints[DP_WIFI_RSSI].getValueAverage());
+		Serial.println(m_mapDataPointsSystem[DP_WIFI_RSSI].getValueAverage());
 
 		Serial.print("Voltage L1-N: ");
-		Serial.print(m_mapDataPoints[DP_VOLTAGE_L1N].getValueNow());
+		Serial.print(m_mapDataPointsSmartmeter[DP_VOLTAGE_L1N].getValueNow());
 		Serial.print(" L2-N: ");
-		Serial.print(m_mapDataPoints[DP_VOLTAGE_L2N].getValueNow());
+		Serial.print(m_mapDataPointsSmartmeter[DP_VOLTAGE_L2N].getValueNow());
 		Serial.print(" L3-N: ");
-		Serial.println(m_mapDataPoints[DP_VOLTAGE_L3N].getValueNow());
+		Serial.println(m_mapDataPointsSmartmeter[DP_VOLTAGE_L3N].getValueNow());
 
 		Serial.print("Voltage L1-L2: ");
-		Serial.print(m_mapDataPoints[DP_VOLTAGE_L1L2].getValueNow());
+		Serial.print(m_mapDataPointsSmartmeter[DP_VOLTAGE_L1L2].getValueNow());
 		Serial.print(" L2-L3: ");
-		Serial.print(m_mapDataPoints[DP_VOLTAGE_L2L3].getValueNow());
+		Serial.print(m_mapDataPointsSmartmeter[DP_VOLTAGE_L2L3].getValueNow());
 		Serial.print(" L3-L1: ");
-		Serial.println(m_mapDataPoints[DP_VOLTAGE_L3L1].getValueNow());
+		Serial.println(m_mapDataPointsSmartmeter[DP_VOLTAGE_L3L1].getValueNow());
 
 		Serial.print("Active Power L1: ");
-		Serial.print(m_mapDataPoints[DP_ACTIVE_POWER_L1].getValueNow());
+		Serial.print(m_mapDataPointsSmartmeter[DP_ACTIVE_POWER_L1].getValueNow());
 		Serial.print(" L2: ");
-		Serial.print(m_mapDataPoints[DP_ACTIVE_POWER_L2].getValueNow());
+		Serial.print(m_mapDataPointsSmartmeter[DP_ACTIVE_POWER_L2].getValueNow());
 		Serial.print(" L3: ");
-		Serial.print(m_mapDataPoints[DP_ACTIVE_POWER_L3].getValueNow());
+		Serial.print(m_mapDataPointsSmartmeter[DP_ACTIVE_POWER_L3].getValueNow());
 		Serial.print(" Total: ");
-		Serial.println(m_mapDataPoints[DP_ACTIVE_POWER_TOTAL].getValueNow());
+		Serial.println(m_mapDataPointsSmartmeter[DP_ACTIVE_POWER_TOTAL].getValueNow());
 
 		Serial.print("Reactive Power L1: ");
-		Serial.print(m_mapDataPoints[DP_REACTIVE_POWER_L1].getValueNow());
+		Serial.print(m_mapDataPointsSmartmeter[DP_REACTIVE_POWER_L1].getValueNow());
 		Serial.print(" L2: ");
-		Serial.print(m_mapDataPoints[DP_REACTIVE_POWER_L2].getValueNow());
+		Serial.print(m_mapDataPointsSmartmeter[DP_REACTIVE_POWER_L2].getValueNow());
 		Serial.print(" L3: ");
-		Serial.print(m_mapDataPoints[DP_REACTIVE_POWER_L3].getValueNow());
+		Serial.print(m_mapDataPointsSmartmeter[DP_REACTIVE_POWER_L3].getValueNow());
 		Serial.print(" Total: ");
-		Serial.println(m_mapDataPoints[DP_REACTIVE_POWER_TOTAL].getValueNow());
+		Serial.println(m_mapDataPointsSmartmeter[DP_REACTIVE_POWER_TOTAL].getValueNow());
 
 		Serial.print("Apparent Power L1: ");
-		Serial.print(m_mapDataPoints[DP_APPARENT_POWER_L1].getValueNow());
+		Serial.print(m_mapDataPointsSmartmeter[DP_APPARENT_POWER_L1].getValueNow());
 		Serial.print(" L2: ");
-		Serial.print(m_mapDataPoints[DP_APPARENT_POWER_L2].getValueNow());
+		Serial.print(m_mapDataPointsSmartmeter[DP_APPARENT_POWER_L2].getValueNow());
 		Serial.print(" L3: ");
-		Serial.print(m_mapDataPoints[DP_APPARENT_POWER_L3].getValueNow());
+		Serial.print(m_mapDataPointsSmartmeter[DP_APPARENT_POWER_L3].getValueNow());
 		Serial.print(" Total: ");
-		Serial.println(m_mapDataPoints[DP_APPARENT_POWER_TOTAL].getValueNow());
+		Serial.println(m_mapDataPointsSmartmeter[DP_APPARENT_POWER_TOTAL].getValueNow());
 
 		Serial.print("Power Factor L1: ");
-		Serial.print(m_mapDataPoints[DP_POWER_FACTOR_L1].getValueNow());
+		Serial.print(m_mapDataPointsSmartmeter[DP_POWER_FACTOR_L1].getValueNow());
 		Serial.print(" L2: ");
-		Serial.print(m_mapDataPoints[DP_POWER_FACTOR_L2].getValueNow());
+		Serial.print(m_mapDataPointsSmartmeter[DP_POWER_FACTOR_L2].getValueNow());
 		Serial.print(" L3: ");
-		Serial.print(m_mapDataPoints[DP_POWER_FACTOR_L3].getValueNow());
+		Serial.print(m_mapDataPointsSmartmeter[DP_POWER_FACTOR_L3].getValueNow());
 		Serial.print(" Total: ");
-		Serial.println(m_mapDataPoints[DP_POWER_FACTOR_TOTAL].getValueNow());
+		Serial.println(m_mapDataPointsSmartmeter[DP_POWER_FACTOR_TOTAL].getValueNow());
 
 		Serial.print("Current L1: ");
-		Serial.print(m_mapDataPoints[DP_CURRENT_L1].getValueNow());
+		Serial.print(m_mapDataPointsSmartmeter[DP_CURRENT_L1].getValueNow());
 		Serial.print(" L2: ");
-		Serial.print(m_mapDataPoints[DP_CURRENT_L2].getValueNow());
+		Serial.print(m_mapDataPointsSmartmeter[DP_CURRENT_L2].getValueNow());
 		Serial.print(" L3: ");
-		Serial.println(m_mapDataPoints[DP_CURRENT_L3].getValueNow());
+		Serial.println(m_mapDataPointsSmartmeter[DP_CURRENT_L3].getValueNow());
 
 		Serial.print("Frequency: ");
-		Serial.println(m_mapDataPoints[DP_FREQUENCY].getValueNow());
+		Serial.println(m_mapDataPointsSmartmeter[DP_FREQUENCY].getValueNow());
 
 		Serial.print("Angle U L1-L2: ");
-		Serial.print(m_mapDataPoints[DP_ANGLE_VOLTAGE_L1L2].getValueNow());
+		Serial.print(m_mapDataPointsSmartmeter[DP_ANGLE_VOLTAGE_L1L2].getValueNow());
 		Serial.print(" L1-L3: ");
-		Serial.println(m_mapDataPoints[DP_ANGLE_VOLTAGE_L1L3].getValueNow());
+		Serial.println(m_mapDataPointsSmartmeter[DP_ANGLE_VOLTAGE_L1L3].getValueNow());
 
 		Serial.print("Angle I L1: ");
-		Serial.print(m_mapDataPoints[DP_ANGLE_CURRENT_L1].getValueNow());
+		Serial.print(m_mapDataPointsSmartmeter[DP_ANGLE_CURRENT_L1].getValueNow());
 		Serial.print(" L2: ");
-		Serial.print(m_mapDataPoints[DP_ANGLE_CURRENT_L2].getValueNow());
+		Serial.print(m_mapDataPointsSmartmeter[DP_ANGLE_CURRENT_L2].getValueNow());
 		Serial.print(" L3: ");
-		Serial.println(m_mapDataPoints[DP_ANGLE_CURRENT_L3].getValueNow());
+		Serial.println(m_mapDataPointsSmartmeter[DP_ANGLE_CURRENT_L3].getValueNow());
 
 		Serial.print("Energy Import: ");
-		Serial.print(m_mapDataPoints[DP_ACTIVE_ENERGY_IMPORT].getValueNow());
+		Serial.print(m_mapDataPointsSmartmeter[DP_ACTIVE_ENERGY_IMPORT].getValueNow());
 		Serial.print(" Export: ");
-		Serial.println(m_mapDataPoints[DP_ACTIVE_ENERGY_EXPORT].getValueNow());
+		Serial.println(m_mapDataPointsSmartmeter[DP_ACTIVE_ENERGY_EXPORT].getValueNow());
 	}
 }
 
-void DataCollector::updateDatapoint(const DATA_POINT dp, const double& value, bool calcAverage)
+void DataCollector::updateDatapoint(const DATA_POINT_SMARTMETER dp, const double& value, bool calcAverage)
 {
-	m_mapDataPoints[dp].updateValue(value, calcAverage);
+	m_mapDataPointsSmartmeter[dp].updateValue(value, calcAverage);
+}
+
+void DataCollector::updateDatapoint(const DATA_POINT_SYSTEM dp, const double& value, bool calcAverage)
+{
+	m_mapDataPointsSystem[dp].updateValue(value, calcAverage);
 }
 
 void DataCollector::calcDerivedValues()
@@ -116,48 +121,26 @@ void DataCollector::calcDerivedValues()
 
 void DataCollector::resetAverages()
 {
-	for (auto& [dp, value] : m_mapDataPoints)
+	for (auto& [dp, value] : m_mapDataPointsSmartmeter)
 	{
 		value.resetAverage();
 	}
 }
 
-MeasuredValue DataCollector::getDataPoint(const DATA_POINT dp)
-{
-	if (m_mapDataPoints.contains(dp))
-		return m_mapDataPoints[dp];
-	else
-		return MeasuredValue();
-}
-
-std::string DataCollector::getJsonStatus() const
-{
-	std::string result;
-
-	// TODO: Status of Board
-	// -> In-/Outputs
-	// -> WiFi RSSI
-	// -> etc.
-
-	result = "{\"STATUS\":\"OK\"}";
-
-	return result;
-}
-
 void DataCollector::calcDerivedVoltage()
 {
 	// Calculate L-L voltages from L-N voltages and phase angles
-	const MeasuredValue& mvAngleL1L2 = m_mapDataPoints[DP_ANGLE_VOLTAGE_L1L2];
-	const MeasuredValue& mvAngleL1L3 = m_mapDataPoints[DP_ANGLE_VOLTAGE_L1L3];
+	const MeasuredValue& mvAngleL1L2 = m_mapDataPointsSmartmeter[DP_ANGLE_VOLTAGE_L1L2];
+	const MeasuredValue& mvAngleL1L3 = m_mapDataPointsSmartmeter[DP_ANGLE_VOLTAGE_L1L3];
 	const double angleL2L3 = mvAngleL1L3.getValueNow() - mvAngleL1L2.getValueNow();
 
-	const MeasuredValue& mvVoltageL1N = m_mapDataPoints[DP_VOLTAGE_L1N];
-	const MeasuredValue& mvVoltageL2N = m_mapDataPoints[DP_VOLTAGE_L2N];
-	const MeasuredValue& mvVoltageL3N = m_mapDataPoints[DP_VOLTAGE_L3N];
+	const MeasuredValue& mvVoltageL1N = m_mapDataPointsSmartmeter[DP_VOLTAGE_L1N];
+	const MeasuredValue& mvVoltageL2N = m_mapDataPointsSmartmeter[DP_VOLTAGE_L2N];
+	const MeasuredValue& mvVoltageL3N = m_mapDataPointsSmartmeter[DP_VOLTAGE_L3N];
 
-	MeasuredValue& mvVoltageL1L2 = m_mapDataPoints[DP_VOLTAGE_L1L2];
-	MeasuredValue& mvVoltageL2L3 = m_mapDataPoints[DP_VOLTAGE_L2L3];
-	MeasuredValue& mvVoltageL3L1 = m_mapDataPoints[DP_VOLTAGE_L3L1];
+	MeasuredValue& mvVoltageL1L2 = m_mapDataPointsSmartmeter[DP_VOLTAGE_L1L2];
+	MeasuredValue& mvVoltageL2L3 = m_mapDataPointsSmartmeter[DP_VOLTAGE_L2L3];
+	MeasuredValue& mvVoltageL3L1 = m_mapDataPointsSmartmeter[DP_VOLTAGE_L3L1];
 
 	const double voltageL1L2 = calcVoltageLL(mvVoltageL1N.getValueNow(), mvVoltageL2N.getValueNow(), mvAngleL1L2.getValueNow());
 	const double voltageL2L3 = calcVoltageLL(mvVoltageL2N.getValueNow(), mvVoltageL3N.getValueNow(), angleL2L3);
@@ -171,13 +154,13 @@ void DataCollector::calcDerivedVoltage()
 void DataCollector::calcDerivedPowerFactor()
 {
 	// Calculate cos(phi) from phase angele
-	const MeasuredValue& mvAngleCurrentL1 = m_mapDataPoints[DP_ANGLE_CURRENT_L1];
-	const MeasuredValue& mvAngleCurrentL2 = m_mapDataPoints[DP_ANGLE_CURRENT_L2];
-	const MeasuredValue& mvAngleCurrentL3 = m_mapDataPoints[DP_ANGLE_CURRENT_L3];
+	const MeasuredValue& mvAngleCurrentL1 = m_mapDataPointsSmartmeter[DP_ANGLE_CURRENT_L1];
+	const MeasuredValue& mvAngleCurrentL2 = m_mapDataPointsSmartmeter[DP_ANGLE_CURRENT_L2];
+	const MeasuredValue& mvAngleCurrentL3 = m_mapDataPointsSmartmeter[DP_ANGLE_CURRENT_L3];
 
-	MeasuredValue& mvPfL1 = m_mapDataPoints[DP_POWER_FACTOR_L1];
-	MeasuredValue& mvPfL2 = m_mapDataPoints[DP_POWER_FACTOR_L2];
-	MeasuredValue& mvPfL3 = m_mapDataPoints[DP_POWER_FACTOR_L3];
+	MeasuredValue& mvPfL1 = m_mapDataPointsSmartmeter[DP_POWER_FACTOR_L1];
+	MeasuredValue& mvPfL2 = m_mapDataPointsSmartmeter[DP_POWER_FACTOR_L2];
+	MeasuredValue& mvPfL3 = m_mapDataPointsSmartmeter[DP_POWER_FACTOR_L3];
 
 	const double pfL1 = calcPowerFactor(mvAngleCurrentL1.getValueNow());
 	const double pfL2 = calcPowerFactor(mvAngleCurrentL2.getValueNow());
@@ -191,19 +174,19 @@ void DataCollector::calcDerivedPowerFactor()
 void DataCollector::calcDerivedReactivePower()
 {
 	// Calculate reactive power from active power and phase angle
-	const MeasuredValue& mvActPowL1 = m_mapDataPoints[DP_ACTIVE_POWER_L1];
-	const MeasuredValue& mvActPowL2 = m_mapDataPoints[DP_ACTIVE_POWER_L2];
-	const MeasuredValue& mvActPowL3 = m_mapDataPoints[DP_ACTIVE_POWER_L3];
-	const MeasuredValue& mvActPowTotal = m_mapDataPoints[DP_ACTIVE_POWER_TOTAL];
+	const MeasuredValue& mvActPowL1 = m_mapDataPointsSmartmeter[DP_ACTIVE_POWER_L1];
+	const MeasuredValue& mvActPowL2 = m_mapDataPointsSmartmeter[DP_ACTIVE_POWER_L2];
+	const MeasuredValue& mvActPowL3 = m_mapDataPointsSmartmeter[DP_ACTIVE_POWER_L3];
+	const MeasuredValue& mvActPowTotal = m_mapDataPointsSmartmeter[DP_ACTIVE_POWER_TOTAL];
 
-	const MeasuredValue& mvAngleCurrentL1 = m_mapDataPoints[DP_ANGLE_CURRENT_L1];
-	const MeasuredValue& mvAngleCurrentL2 = m_mapDataPoints[DP_ANGLE_CURRENT_L2];
-	const MeasuredValue& mvAngleCurrentL3 = m_mapDataPoints[DP_ANGLE_CURRENT_L3];
+	const MeasuredValue& mvAngleCurrentL1 = m_mapDataPointsSmartmeter[DP_ANGLE_CURRENT_L1];
+	const MeasuredValue& mvAngleCurrentL2 = m_mapDataPointsSmartmeter[DP_ANGLE_CURRENT_L2];
+	const MeasuredValue& mvAngleCurrentL3 = m_mapDataPointsSmartmeter[DP_ANGLE_CURRENT_L3];
 
-	MeasuredValue& mvReactPowL1 = m_mapDataPoints[DP_REACTIVE_POWER_L1];
-	MeasuredValue& mvReactPowL2 = m_mapDataPoints[DP_REACTIVE_POWER_L2];
-	MeasuredValue& mvReactPowL3 = m_mapDataPoints[DP_REACTIVE_POWER_L3];
-	MeasuredValue& mvReactPowTotal = m_mapDataPoints[DP_REACTIVE_POWER_TOTAL];
+	MeasuredValue& mvReactPowL1 = m_mapDataPointsSmartmeter[DP_REACTIVE_POWER_L1];
+	MeasuredValue& mvReactPowL2 = m_mapDataPointsSmartmeter[DP_REACTIVE_POWER_L2];
+	MeasuredValue& mvReactPowL3 = m_mapDataPointsSmartmeter[DP_REACTIVE_POWER_L3];
+	MeasuredValue& mvReactPowTotal = m_mapDataPointsSmartmeter[DP_REACTIVE_POWER_TOTAL];
 
 	const double reactPowL1 = calcReactivePower(mvActPowL1.getValueNow(), mvAngleCurrentL1.getValueNow());
 	const double reactPowL2 = calcReactivePower(mvActPowL2.getValueNow(), mvAngleCurrentL2.getValueNow());
@@ -219,22 +202,22 @@ void DataCollector::calcDerivedReactivePower()
 void DataCollector::calcDerivedApparentPower()
 {
 	// Calculate apparent power and total power factor from active and reactive power
-	const MeasuredValue& mvActPowL1 = m_mapDataPoints[DP_ACTIVE_POWER_L1];
-	const MeasuredValue& mvActPowL2 = m_mapDataPoints[DP_ACTIVE_POWER_L2];
-	const MeasuredValue& mvActPowL3 = m_mapDataPoints[DP_ACTIVE_POWER_L3];
-	const MeasuredValue& mvActPowTotal = m_mapDataPoints[DP_ACTIVE_POWER_TOTAL];
+	const MeasuredValue& mvActPowL1 = m_mapDataPointsSmartmeter[DP_ACTIVE_POWER_L1];
+	const MeasuredValue& mvActPowL2 = m_mapDataPointsSmartmeter[DP_ACTIVE_POWER_L2];
+	const MeasuredValue& mvActPowL3 = m_mapDataPointsSmartmeter[DP_ACTIVE_POWER_L3];
+	const MeasuredValue& mvActPowTotal = m_mapDataPointsSmartmeter[DP_ACTIVE_POWER_TOTAL];
 
-	const MeasuredValue& mvReactPowL1 = m_mapDataPoints[DP_REACTIVE_POWER_L1];
-	const MeasuredValue& mvReactPowL2 = m_mapDataPoints[DP_REACTIVE_POWER_L2];
-	const MeasuredValue& mvReactPowL3 = m_mapDataPoints[DP_REACTIVE_POWER_L3];
-	const MeasuredValue& mvReactPowTotal = m_mapDataPoints[DP_REACTIVE_POWER_TOTAL];
+	const MeasuredValue& mvReactPowL1 = m_mapDataPointsSmartmeter[DP_REACTIVE_POWER_L1];
+	const MeasuredValue& mvReactPowL2 = m_mapDataPointsSmartmeter[DP_REACTIVE_POWER_L2];
+	const MeasuredValue& mvReactPowL3 = m_mapDataPointsSmartmeter[DP_REACTIVE_POWER_L3];
+	const MeasuredValue& mvReactPowTotal = m_mapDataPointsSmartmeter[DP_REACTIVE_POWER_TOTAL];
 
-	MeasuredValue& mvAppPowL1 = m_mapDataPoints[DP_APPARENT_POWER_L1];
-	MeasuredValue& mvAppPowL2 = m_mapDataPoints[DP_APPARENT_POWER_L2];
-	MeasuredValue& mvAppPowL3 = m_mapDataPoints[DP_APPARENT_POWER_L3];
-	MeasuredValue& mvAppPowTotal = m_mapDataPoints[DP_APPARENT_POWER_TOTAL];
+	MeasuredValue& mvAppPowL1 = m_mapDataPointsSmartmeter[DP_APPARENT_POWER_L1];
+	MeasuredValue& mvAppPowL2 = m_mapDataPointsSmartmeter[DP_APPARENT_POWER_L2];
+	MeasuredValue& mvAppPowL3 = m_mapDataPointsSmartmeter[DP_APPARENT_POWER_L3];
+	MeasuredValue& mvAppPowTotal = m_mapDataPointsSmartmeter[DP_APPARENT_POWER_TOTAL];
 
-	MeasuredValue& mvPfTotal = m_mapDataPoints[DP_POWER_FACTOR_TOTAL];
+	MeasuredValue& mvPfTotal = m_mapDataPointsSmartmeter[DP_POWER_FACTOR_TOTAL];
 
 	const double appPowL1 = calcApparentPower(mvActPowL1.getValueNow(), mvReactPowL1.getValueNow());
 	const double appPowL2 = calcApparentPower(mvActPowL2.getValueNow(), mvReactPowL2.getValueNow());

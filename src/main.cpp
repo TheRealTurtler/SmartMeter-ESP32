@@ -7,6 +7,7 @@
 #include "components/timer.hpp"
 #include "web/server/httpserver.hpp"
 #include "smlreader.hpp"
+#include "time.h"
 
 #include "../secrets/wifi.h"
 
@@ -66,6 +67,11 @@ void checkWifi()
 				Serial.print(WiFi.localIP());
 				Serial.print(" Hostname: ");
 				Serial.print(WiFi.getHostname());
+
+				// FIXME NTP Time
+				// -> Should be called now and again to keep time accurate
+				// -> ESP32 keeps time after reset, but not after power loss
+				configTime(0, 3600, "pool.ntp.org", "time.nist.gov", "time.google.com");
 
 				server.start();
 			}

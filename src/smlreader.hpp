@@ -24,13 +24,14 @@ private:
 	struct ObisData
 	{
 		const unsigned char obis[6];
-		const DATA_POINT dp;
+		const DATA_POINT_SMARTMETER dp;
 		const sml_units_t unit;
 	};
 
 	static const std::vector<ObisData> m_vecObisData;
 
-	std::map<DATA_POINT, double> m_mapValues;
+	std::map<DATA_POINT_SMARTMETER, double> m_mapValues;
+	int64_t m_tsLastUpdate = -1;
 
 	bool readByte(unsigned char byte);
 	void obisHandler(const ObisData& obisValue);

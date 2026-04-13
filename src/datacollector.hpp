@@ -2,60 +2,8 @@
 
 #include <string>
 #include <map>
+#include "datapoints.hpp"
 #include "measuredvalue.hpp"
-
-enum DATA_POINT
-{
-	// Smartmeter
-	DP_ACTIVE_POWER_TOTAL,
-	DP_ACTIVE_POWER_L1,
-	DP_ACTIVE_POWER_L2,
-	DP_ACTIVE_POWER_L3,
-
-	DP_REACTIVE_POWER_TOTAL,
-	DP_REACTIVE_POWER_L1,
-	DP_REACTIVE_POWER_L2,
-	DP_REACTIVE_POWER_L3,
-
-	DP_APPARENT_POWER_TOTAL,
-	DP_APPARENT_POWER_L1,
-	DP_APPARENT_POWER_L2,
-	DP_APPARENT_POWER_L3,
-
-	DP_ACTIVE_ENERGY_IMPORT,
-	DP_ACTIVE_ENERGY_EXPORT,
-
-	DP_VOLTAGE_L1N,
-	DP_VOLTAGE_L2N,
-	DP_VOLTAGE_L3N,
-
-	DP_VOLTAGE_L1L2,
-	DP_VOLTAGE_L2L3,
-	DP_VOLTAGE_L3L1,
-
-	DP_CURRENT_L1,
-	DP_CURRENT_L2,
-	DP_CURRENT_L3,
-
-	DP_POWER_FACTOR_TOTAL,
-	DP_POWER_FACTOR_L1,
-	DP_POWER_FACTOR_L2,
-	DP_POWER_FACTOR_L3,
-
-	DP_ANGLE_VOLTAGE_L1L2,
-	DP_ANGLE_VOLTAGE_L1L3,
-
-	DP_ANGLE_CURRENT_L1,
-	DP_ANGLE_CURRENT_L2,
-	DP_ANGLE_CURRENT_L3,
-
-	DP_FREQUENCY,
-
-	// General
-	DP_MCU_USAGE,
-	DP_WIFI_RSSI,
-	DP_TEMPERATURE,
-};
 
 class DataCollector
 {
@@ -65,19 +13,23 @@ public:
 
 	void update();
 
-	void updateDatapoint(const DATA_POINT dp, const double& value, bool calcAverage = true);
+	void updateDatapoint(const DATA_POINT_SMARTMETER dp, const double& value, bool calcAverage = true);
+	void updateDatapoint(const DATA_POINT_SYSTEM dp, const double& value, bool calcAverage = true);
 	void calcDerivedValues();
+
+	const int64_t& getTsLastUpdateSmartmeter() const { return m_tsLastUpdateSmartmeter; }
+	void setTsLastUpdateSmartmeter(const int64_t& ts) { m_tsLastUpdateSmartmeter = ts; }
 
 	void resetAverages();
 
-	const std::map<DATA_POINT, MeasuredValue>& getDataPoints() const { return m_mapDataPoints; }
-	MeasuredValue getDataPoint(const DATA_POINT dp);
-
-	// FIXME Move to HttpAPI
-	std::string getJsonStatus() const;
+	const std::map<DATA_POINT_SMARTMETER, MeasuredValue>& getDataPointsSmartmeter() const { return m_mapDataPointsSmartmeter; }
+	const std::map<DATA_POINT_SYSTEM, MeasuredValue>& getDataPointsSystem() const { return m_mapDataPointsSystem; }
 
 private:
-	std::map<DATA_POINT, MeasuredValue> m_mapDataPoints;
+	std::map<DATA_POINT_SMARTMETER, MeasuredValue> m_mapDataPointsSmartmeter;
+	std::map<DATA_POINT_SYSTEM, MeasuredValue> m_mapDataPointsSystem;
+
+	int64_t m_tsLastUpdateSmartmeter = -1;
 
 	void calcDerivedVoltage();
 	void calcDerivedPowerFactor();
