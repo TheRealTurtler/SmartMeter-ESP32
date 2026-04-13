@@ -23,7 +23,7 @@ const std::vector<SMLReader::ObisData> SMLReader::m_vecObisData =
 	{ {0x01, 0x00, 1,  8, 0, 0xff}, 			DP_ACTIVE_ENERGY_IMPORT,		SML_WATT_HOUR},
 	{ {0x01, 0x00, 2,  8, 0, 0xff}, 			DP_ACTIVE_ENERGY_EXPORT,		SML_WATT_HOUR},
 	{ {0x01, 0x00, 81, 7, 1, 0xff}, 			DP_ANGLE_VOLTAGE_L1L2,			SML_DEGREE},
-	{ {0x01, 0x00, 81, 7, 2, 0xff}, 			DP_ANGLE_VOLTAGE_L1L3,			SML_DEGREE},
+	{ {0x01, 0x00, 81, 7, 2, 0xff}, 			DP_ANGLE_VOLTAGE_L3L1,			SML_DEGREE},
 	{ {0x01, 0x00, 81, 7, 4, 0xff}, 			DP_ANGLE_CURRENT_L1,			SML_DEGREE},
 	{ {0x01, 0x00, 81, 7, 15, 0xff}, 			DP_ANGLE_CURRENT_L2,			SML_DEGREE},
 	{ {0x01, 0x00, 81, 7, 26, 0xff}, 			DP_ANGLE_CURRENT_L3,			SML_DEGREE},

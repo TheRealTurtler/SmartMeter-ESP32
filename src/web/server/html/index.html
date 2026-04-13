@@ -146,6 +146,27 @@
 			line-height: 1.4;
 		}
 
+		.two-column {
+			display: grid;
+			grid-template-columns: 1fr 1fr;
+			gap: 15px;
+		}
+
+		.column {
+			display: flex;
+			flex-direction: column;
+		}
+
+		.column-header {
+			font-size: 12px;
+			text-transform: uppercase;
+			color: #667eea;
+			font-weight: 600;
+			margin-bottom: 8px;
+			padding-bottom: 6px;
+			border-bottom: 1px solid #ddd;
+		}
+
 		.footer {
 			text-align: center;
 			margin-top: 40px;
@@ -177,7 +198,7 @@
 
 			<!-- Power flow direction arrow -->
 			<div style="text-align:center; font-size:32px; margin-top:5px;">
-				🏠 <span id="power_arrow">←</span> 🔌
+				🏠 <span id="power_arrow">⬅</span> 🔌
 			</div>
 
 			<!-- Phase boxes for individual power values -->
@@ -235,12 +256,21 @@
 
 				<div class="card">
 					<h3>Leistungsfaktor</h3>
-					<div class="value"><span id="PF_TOT">--</span></div>
-					<div class="unit"></div>
-					<div class="sub-small">
-						L1: <span id="PF_L1">--</span><br>
-						L2: <span id="PF_L2">--</span><br>
-						L3: <span id="PF_L3">--</span>
+					<div class="two-column">
+						<div class="column">
+							<div class="sub-small">
+								L1: <span id="PF_L1">--</span><br>
+								L2: <span id="PF_L2">--</span><br>
+								L3: <span id="PF_L3">--</span>
+							</div>
+						</div>
+						<div class="column">
+							<div class="sub-small">
+								<span id="ANG_I_L1">--</span> °<br>
+								<span id="ANG_I_L2">--</span> °<br>
+								<span id="ANG_I_L3">--</span> °
+							</div>
+						</div>
 					</div>
 				</div>
 			</div>
@@ -251,13 +281,27 @@
 			<div class="row">
 				<div class="card">
 					<h3>Spannungen</h3>
-					<div class="sub-small">
-						L1‑N: <span id="U_L1N">--</span> V<br>
-						L2‑N: <span id="U_L2N">--</span> V<br>
-						L3‑N: <span id="U_L3N">--</span> V<br><br>
-						L1‑L2: <span id="U_L1L2">--</span> V<br>
-						L2‑L3: <span id="U_L2L3">--</span> V<br>
-						L3‑L1: <span id="U_L3L1">--</span> V
+					<div class="two-column">
+						<div class="column">
+							<div class="sub-small">
+								L1‑N: <span id="U_L1N">--</span> V<br>
+								L2‑N: <span id="U_L2N">--</span> V<br>
+								L3‑N: <span id="U_L3N">--</span> V<br><br>
+								L1‑L2: <span id="U_L1L2">--</span> V<br>
+								L2‑L3: <span id="U_L2L3">--</span> V<br>
+								L3‑L1: <span id="U_L3L1">--</span> V
+							</div>
+						</div>
+						<div class="column">
+							<div class="sub-small">
+								<br>
+								<br>
+								<br><br>
+								<span id="ANG_U_L1L2">--</span> °<br>
+								<span id="ANG_U_L2L3">--</span> °<br>
+								<span id="ANG_U_L3L1">--</span> °
+							</div>
+						</div>
 					</div>
 				</div>
 
@@ -406,6 +450,14 @@
 		}
 
 		/**
+		 * Format angle/phase with 1 decimal place
+		 */
+		function formatAngle(value) {
+			if (value === null || value === undefined) return '--';
+			return parseFloat(value).toFixed(1);
+		}
+
+		/**
 		 * Format power factor with 4 decimal places
 		 */
 		function formatPowerFactor(value) {
@@ -492,9 +544,9 @@
 						const arrowElement = document.getElementById('power_arrow');
 						if (arrowElement) {
 							if (powerValue < 0) {
-								arrowElement.textContent = '🠆'; // Export (right arrow)
+								arrowElement.textContent = '⮕'; // Export (right arrow)
 							} else {
-								arrowElement.textContent = '🠄'; // Import (left arrow)
+								arrowElement.textContent = '⬅'; // Import (left arrow)
 							}
 						}
 					}
@@ -573,6 +625,26 @@
 						const element = document.getElementById(elementId);
 						if (element) {
 							element.textContent = formatPowerFactor(data[elementId].now);
+						}
+					}
+				});
+
+				// Update phase angles U-I (1 decimal)
+				['ANG_I_L1', 'ANG_I_L2', 'ANG_I_L3'].forEach(elementId => {
+					if (data[elementId]) {
+						const element = document.getElementById(elementId);
+						if (element) {
+							element.textContent = formatAngle(data[elementId].now);
+						}
+					}
+				});
+
+				// Update phase angles U-U L-L (1 decimal)
+				['ANG_U_L1L2', 'ANG_U_L2L3', 'ANG_U_L3L1'].forEach(elementId => {
+					if (data[elementId]) {
+						const element = document.getElementById(elementId);
+						if (element) {
+							element.textContent = formatAngle(data[elementId].now);
 						}
 					}
 				});

@@ -85,7 +85,7 @@ void DataCollector::update()
 		Serial.print("Angle U L1-L2: ");
 		Serial.print(m_mapDataPointsSmartmeter[DP_ANGLE_VOLTAGE_L1L2].getValueNow());
 		Serial.print(" L1-L3: ");
-		Serial.println(m_mapDataPointsSmartmeter[DP_ANGLE_VOLTAGE_L1L3].getValueNow());
+		Serial.println(m_mapDataPointsSmartmeter[DP_ANGLE_VOLTAGE_L3L1].getValueNow());
 
 		Serial.print("Angle I L1: ");
 		Serial.print(m_mapDataPointsSmartmeter[DP_ANGLE_CURRENT_L1].getValueNow());
@@ -131,8 +131,10 @@ void DataCollector::calcDerivedVoltage()
 {
 	// Calculate L-L voltages from L-N voltages and phase angles
 	const MeasuredValue& mvAngleL1L2 = m_mapDataPointsSmartmeter[DP_ANGLE_VOLTAGE_L1L2];
-	const MeasuredValue& mvAngleL1L3 = m_mapDataPointsSmartmeter[DP_ANGLE_VOLTAGE_L1L3];
-	const double angleL2L3 = mvAngleL1L3.getValueNow() - mvAngleL1L2.getValueNow();
+	const MeasuredValue& mvAngleL3L1 = m_mapDataPointsSmartmeter[DP_ANGLE_VOLTAGE_L3L1];
+	MeasuredValue& mvAngleL2L3 = m_mapDataPointsSmartmeter[DP_ANGLE_VOLTAGE_L2L3];
+
+	mvAngleL2L3.updateValue(std::abs(mvAngleL3L1.getValueNow() - mvAngleL1L2.getValueNow()));
 
 	const MeasuredValue& mvVoltageL1N = m_mapDataPointsSmartmeter[DP_VOLTAGE_L1N];
 	const MeasuredValue& mvVoltageL2N = m_mapDataPointsSmartmeter[DP_VOLTAGE_L2N];
@@ -143,8 +145,8 @@ void DataCollector::calcDerivedVoltage()
 	MeasuredValue& mvVoltageL3L1 = m_mapDataPointsSmartmeter[DP_VOLTAGE_L3L1];
 
 	const double voltageL1L2 = calcVoltageLL(mvVoltageL1N.getValueNow(), mvVoltageL2N.getValueNow(), mvAngleL1L2.getValueNow());
-	const double voltageL2L3 = calcVoltageLL(mvVoltageL2N.getValueNow(), mvVoltageL3N.getValueNow(), angleL2L3);
-	const double voltageL3L1 = calcVoltageLL(mvVoltageL3N.getValueNow(), mvVoltageL1N.getValueNow(), mvAngleL1L3.getValueNow());
+	const double voltageL2L3 = calcVoltageLL(mvVoltageL2N.getValueNow(), mvVoltageL3N.getValueNow(), mvAngleL2L3.getValueNow());
+	const double voltageL3L1 = calcVoltageLL(mvVoltageL3N.getValueNow(), mvVoltageL1N.getValueNow(), mvAngleL3L1.getValueNow());
 
 	mvVoltageL1L2.updateValue(voltageL1L2);
 	mvVoltageL2L3.updateValue(voltageL2L3);
