@@ -188,7 +188,7 @@
 		</div>
 
 		<!-- Last update time -->
-		<div class="last-update">Aktualisiert: <span id="last_update">--</span></div>
+		<div class="last-update">Aktualisiert: <span id="time_last_update">--</span></div>
 
 		<!-- Active Power Section -->
 		<div class="block">
@@ -658,9 +658,9 @@
 				}
 
 				// Update timestamp
-				if (data.last_update) {
-					const timestamp = new Date(data.last_update);
-					document.getElementById('last_update').textContent = timestamp.toLocaleString('de-DE');
+				if (data.time_last_update) {
+					const timestamp = new Date(data.time_last_update);
+					document.getElementById('time_last_update').textContent = timestamp.toLocaleString('de-DE');
 				}
 			} catch (error) {
 				console.error('Error fetching smartmeter data:', error);

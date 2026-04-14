@@ -3,8 +3,7 @@
 
 
 Timer::Timer()
-{
-}
+{ }
 
 Timer::~Timer()
 {
@@ -16,25 +15,48 @@ void Timer::setCallback(callback_fc callback)
 	m_callback = callback;
 }
 
-void Timer::setInterval_us(unsigned long interval)
+void Timer::setSingleShot(bool singleshot)
+{
+	m_singleshot = singleshot;
+}
+
+void Timer::setInterval_us(const unsigned long& interval)
 {
 	m_interval = interval;
 }
 
-void Timer::setInterval_ms(unsigned long interval)
+void Timer::setInterval_ms(const unsigned long& interval)
 {
-	setInterval_us(interval * 1000);
+	setInterval_us(interval * 1000UL);
 }
 
-void Timer::setInterval_s(unsigned long interval)
+void Timer::setInterval_s(const unsigned long& interval)
 {
-	setInterval_ms(interval * 1000);
+	setInterval_us(interval * 1000UL * 1000UL);
 }
 
 void Timer::start()
 {
 	m_timeLast = micros();
 	m_started = true;
+}
+
+void Timer::start_us(const unsigned long& interval)
+{
+	setInterval_us(interval);
+	start();
+}
+
+void Timer::start_ms(const unsigned long& interval)
+{
+	setInterval_ms(interval);
+	start();
+}
+
+void Timer::start_s(const unsigned long& interval)
+{
+	setInterval_s(interval);
+	start();
 }
 
 void Timer::stop()
@@ -58,6 +80,9 @@ void Timer::update()
 
 	if (timeDiff > m_interval)
 	{
+		if (m_singleshot)
+			stop();
+
 		m_timeLast = time_us;
 		m_callback();
 	}

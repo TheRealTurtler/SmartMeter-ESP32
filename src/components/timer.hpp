@@ -12,11 +12,16 @@ public:
 
 	void setCallback(callback_fc callback);
 
-	void setInterval_us(unsigned long interval);
-	void setInterval_ms(unsigned long interval);
-	void setInterval_s(unsigned long interval);
+	void setSingleShot(bool singleshot);
+
+	void setInterval_us(const unsigned long& interval);
+	void setInterval_ms(const unsigned long& interval);
+	void setInterval_s(const unsigned long& interval);
 
 	void start();
+	void start_us(const unsigned long& interval);
+	void start_ms(const unsigned long& interval);
+	void start_s(const unsigned long& interval);
 	void stop();
 
 	void update();
@@ -25,6 +30,8 @@ public:
 
 private:
 	bool m_started = false;
+	bool m_singleshot = false;
+
 	callback_fc m_callback;
 
 	unsigned long m_interval = 0;

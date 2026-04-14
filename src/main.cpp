@@ -5,6 +5,7 @@
 #include "components/heartbeat.hpp"
 #include "components/watchdog.hpp"
 #include "components/timer.hpp"
+#include "web/client/httpclient.hpp"
 #include "web/server/httpserver.hpp"
 #include "smlreader.hpp"
 #include "time.h"
@@ -20,14 +21,18 @@ constexpr uint8_t PIN_TX = 21;
 Watchdog wd(3000);
 Heartbeat hb(1000, PIN_LED, true);
 
-DataCollector dc;
+DataCollector dc(DataCollector::AVG_1_MIN);
 SMLReader sml(&dc, Serial1, PIN_RX, PIN_TX);
-HttpServer server(dc, 80);
+
+HttpAPI api;
+HttpClient client(api, dc);
+HttpServer server(api, dc, 80);
 
 // TODO Move to separate file
 Timer timerWifi;
 wl_status_t wifiLastState = WL_DISCONNECTED;
-const char* HOSTNAME = "ESP32-SmartMeter";
+const char* const HOSTNAME = "ESP32-SmartMeter";
+
 
 void checkWifi()
 {
@@ -57,21 +62,18 @@ void checkWifi()
 		{
 			const int32_t rssi = WiFi.RSSI();
 
-			//Serial.print(" RSSI: ");
-			//Serial.print(rssi);
-
 			if (wifiLastState != wifiState)
 			{
 				hb.pattern(Heartbeat::FAST_1, 3);
 				Serial.print(" --- WiFi connected. IP: ");
 				Serial.print(WiFi.localIP());
 				Serial.print(" Hostname: ");
-				Serial.print(WiFi.getHostname());
+				Serial.println(WiFi.getHostname());
 
 				// FIXME NTP Time
 				// -> Should be called now and again to keep time accurate
 				// -> ESP32 keeps time after reset, but not after power loss
-				configTime(0, 3600, "pool.ntp.org", "time.nist.gov", "time.google.com");
+				configTime(2 * 3600, 3600, "pool.ntp.org", "time.nist.gov", "time.google.com");
 
 				server.start();
 			}
@@ -86,8 +88,6 @@ void checkWifi()
 			WiFi.reconnect();
 		}
 
-		//Serial.println();
-
 		wifiLastState = wifiState;
 	}
 }
@@ -101,7 +101,11 @@ void setup()
 	// TODO Debug output
 	Serial.begin(9600);
 
+	dc.init();
 	sml.init();
+
+	api.init();
+	client.init();
 	server.init();
 
 	// TODO Start in AP-Mode and let User enter SSID and password
@@ -114,6 +118,8 @@ void setup()
 
 	// Watchdog
 	wd.init();
+
+	dc.start();
 }
 
 void loop()
@@ -136,8 +142,11 @@ void loop()
 	wd.update();		// Watchdog
 	hb.update();		// Heartbeat
 
+	dc.update();		// Data Collector
 	sml.update();		// SML Reader
-	dc.update();		// Data Collector (calculate power factor, L-L voltage etc.)
+
+	api.update();		// HTTP API for Server and Client
+	client.update();	// HTTP Client
 	server.update(); 	// HTTP Server
 
 	timerWifi.update();

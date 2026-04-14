@@ -31,7 +31,7 @@ private:
 	static const std::vector<ObisData> m_vecObisData;
 
 	std::map<DATA_POINT_SMARTMETER, double> m_mapValues;
-	int64_t m_tsLastUpdate = -1;
+	unsigned long m_tsLastUpdate = 0;
 
 	bool readByte(unsigned char byte);
 	void obisHandler(const ObisData& obisValue);

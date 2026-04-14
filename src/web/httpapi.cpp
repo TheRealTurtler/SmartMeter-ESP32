@@ -1,76 +1,48 @@
 #include "httpapi.hpp"
-#include "html.hpp"
-#include <sstream>
-#include "time.h"
+#include "components/datetime.hpp"
 
 
-HttpAPI::HttpAPI(const DataCollector& dc, WebServer* const server):
-	m_server(server),
-	m_dc(dc)
+HttpAPI::HttpAPI()
 {
 
 }
 
 void HttpAPI::init()
 {
-	m_server->on("/api/status", [this]() { this->getStatus(); });
-	m_server->on("/api/smartmeter", [this]() { this->getSmartmeter(); });
-	m_server->on("/api/system", [this]() { this->getSystem(); });
+
 }
 
-std::vector<std::string> HttpAPI::convertToList(const std::string& str, const char delimiter)
+void HttpAPI::update()
 {
-	std::vector<std::string> result;
 
-	std::istringstream iss(str);
-	std::string token;
-
-	while (std::getline(iss, token, delimiter))
-	{
-		result.push_back(token);
-	}
-
-	return result;
 }
 
-void HttpAPI::getStatus()
+ArduinoJson::JsonDocument HttpAPI::buildJsonStatus() const
 {
-	Serial.println("HTTP GET STATUS");
-
 	ArduinoJson::JsonDocument doc;
-
 	doc["status"] = "ok";
 
-	sendJsonResponse(200, doc);
+	return doc;
 }
 
-void HttpAPI::getSmartmeter()
+ArduinoJson::JsonDocument HttpAPI::buildJsonSmartmeter(const DateTime& dt, const DataSmartMeter& data, const std::vector<std::string>& vecFilter) const
 {
-	Serial.println("HTTP GET SMARTMETER");
-
 	ArduinoJson::JsonDocument doc;
-	std::vector<std::string> vecFilter;
 
-	if (m_server->hasArg("dp"))
-		vecFilter = convertToList(m_server->arg("dp").c_str(), ',');
-
-	const int64_t tsLastUpdate = m_dc.getTsLastUpdateSmartmeter();
-
-	if (tsLastUpdate >= 0)
+	if (data.tsLastUpdate > 0)
 	{
 		doc["status"] = "ok";
+		doc["time_dataset"] = dt.toMSecsSinceEpoch();
 
-		const std::map<DATA_POINT_SMARTMETER, MeasuredValue>& mapDataPoints = m_dc.getDataPointsSmartmeter();
+		const unsigned long tsNow = micros();
+		const long tsDelta = tsNow - data.tsLastUpdate;
 
-		const int64_t tsNow = micros();
-		const int64_t tsDelta = tsNow - tsLastUpdate;
+		const DateTime dtNow = DateTime::currentDateTime();
+		const DateTime dtLastUpdate = dtNow.addUSecs(-tsDelta);
 
-		const int64_t timeNow = getUnixTime_us();
-		const int64_t timeLastUpdate = timeNow - tsDelta;
+		doc["time_last_update"] = dtLastUpdate.toMSecsSinceEpoch();
 
-		doc["last_update"] = (timeLastUpdate / 1000);
-
-		for (const auto& [dp, mv] : mapDataPoints)
+		for (const auto& [dp, mv] : data.mapData)
 		{
 			if (gc_mapDataPointInfoSmartmeter.contains(dp))
 			{
@@ -97,25 +69,19 @@ void HttpAPI::getSmartmeter()
 		doc["status"] = "no_data";
 	}
 
-	sendJsonResponse(200, doc);
+	return doc;
 }
 
-void HttpAPI::getSystem()
+ArduinoJson::JsonDocument HttpAPI::buildJsonSystem(const DateTime& dt, const DataSystem& data, const std::vector<std::string>& vecFilter) const
 {
-	Serial.println("HTTP GET SYSTEM");
-
 	ArduinoJson::JsonDocument doc;
-	std::vector<std::string> vecFilter;
-
-	if (m_server->hasArg("dp"))
-		vecFilter = convertToList(m_server->arg("dp").c_str(), ',');
 
 	doc["status"] = "ok";
-	doc["time"] = getUnixTime_ms();
+	doc["time_dataset"] = dt.toMSecsSinceEpoch();
 
-	const std::map<DATA_POINT_SYSTEM, MeasuredValue>& mapDataPoints = m_dc.getDataPointsSystem();
+	doc["time_now"] = DateTime::currentMSecsSinceEpoch();
 
-	for (const auto& [dp, mv] : mapDataPoints)
+	for (const auto& [dp, mv] : data.mapData)
 	{
 		if (gc_mapDataPointInfoSystem.contains(dp))
 		{
@@ -131,21 +97,5 @@ void HttpAPI::getSystem()
 		}
 	}
 
-	sendJsonResponse(200, doc);
-}
-
-void HttpAPI::sendJsonResponse(const int httpCode, const ArduinoJson::JsonDocument& doc)
-{
-	std::string strJson;
-	ArduinoJson::serializeJson(doc, strJson);
-
-	m_server->send(httpCode, "application/json", strJson.c_str());
-}
-
-int64_t HttpAPI::getUnixTime_us()
-{
-	struct timeval tv_now;
-	gettimeofday(&tv_now, NULL);
-
-	return static_cast<int64_t>(tv_now.tv_sec) * 1000000L + tv_now.tv_usec;
+	return doc;
 }
