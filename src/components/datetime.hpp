@@ -40,6 +40,7 @@ public:
 	int64_t mSecsTo(const DateTime& dt) const { return (uSecsTo(dt) / 1000); }
 	int64_t secsTo(const DateTime& dt) const { return (uSecsTo(dt) / 1000 / 1000); }
 
+	// For format description see strftime
 	std::string toString(const std::string& format) const;
 
 	bool operator==(const DateTime& other) const { return m_timestamp_us == other.m_timestamp_us; }

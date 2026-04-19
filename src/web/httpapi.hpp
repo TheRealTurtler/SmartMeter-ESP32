@@ -17,6 +17,6 @@ public:
 	void update();
 
 	ArduinoJson::JsonDocument buildJsonStatus() const;
-	ArduinoJson::JsonDocument buildJsonSmartmeter(const DateTime& dt, const DataSmartMeter& data, const std::vector<std::string>& vecFilter) const;
-	ArduinoJson::JsonDocument buildJsonSystem(const DateTime& dt, const DataSystem& data, const std::vector<std::string>& vecFilter) const;
+	ArduinoJson::JsonDocument buildJsonSmartmeter(const DateTime& dt, const DataSmartMeter& data, const std::vector<std::string>& vecFilter = { }) const;
+	ArduinoJson::JsonDocument buildJsonSystem(const DateTime& dt, const DataSystem& data, const std::vector<std::string>& vecFilter = { }) const;
 };

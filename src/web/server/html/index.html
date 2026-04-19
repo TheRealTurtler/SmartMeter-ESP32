@@ -284,12 +284,12 @@
 					<div class="two-column">
 						<div class="column">
 							<div class="sub-small">
-								L1‑N: <span id="U_L1N">--</span> V<br>
-								L2‑N: <span id="U_L2N">--</span> V<br>
-								L3‑N: <span id="U_L3N">--</span> V<br><br>
-								L1‑L2: <span id="U_L1L2">--</span> V<br>
-								L2‑L3: <span id="U_L2L3">--</span> V<br>
-								L3‑L1: <span id="U_L3L1">--</span> V
+								L1-N: <span id="U_L1N">--</span> V<br>
+								L2-N: <span id="U_L2N">--</span> V<br>
+								L3-N: <span id="U_L3N">--</span> V<br><br>
+								L1-L2: <span id="U_L1L2">--</span> V<br>
+								L2-L3: <span id="U_L2L3">--</span> V<br>
+								L3-L1: <span id="U_L3L1">--</span> V
 							</div>
 						</div>
 						<div class="column">
@@ -326,10 +326,35 @@
 		<div class="block">
 			<div class="title">Systeminformationen</div>
 			<div class="row">
+
 				<div class="card">
 					<h3>MCU Auslastung</h3>
-					<div class="value"><span id="MCU_USAGE">--</span></div>
+					<div style="display:flex; justify-content:space-around; text-align:center;">
+						<div>
+							<div class="value"><span id="MCU_USAGE_1MIN">--</span></div>
+							<div class="unit">%</div>
+							<div class="sub-small">1 min</div>
+						</div>
+						<div>
+							<div class="value"><span id="MCU_USAGE_5MIN">--</span></div>
+							<div class="unit">%</div>
+							<div class="sub-small">5 min</div>
+						</div>
+						<div>
+							<div class="value"><span id="MCU_USAGE_15MIN">--</span></div>
+							<div class="unit">%</div>
+							<div class="sub-small">15 min</div>
+						</div>
+					</div>
+				</div>
+
+				<div class="card">
+					<h3>RAM Auslastung</h3>
+					<div class="value"><span id="RAM_USAGE_PERC">--</span></div>
 					<div class="unit">%</div>
+					<div class="sub-small">
+						<span id="RAM_USAGE_VALUE">--</span> / <span id="RAM_TOTAL_VALUE">--</span>
+					</div>
 				</div>
 
 				<div class="card">
@@ -353,377 +378,153 @@
 	</div>
 
 	<script>
-		// Configuration
-		const API_INTERVAL = 5000; // 5 seconds
+		const API_INTERVAL = 5000;
 		const SMARTMETER_API = '/api/smartmeter';
 		const SYSTEM_API = '/api/system';
-		const POWER_SCALE_THRESHOLD = 1000; // W, VA, VAR threshold for scaling to k
+		const POWER_SCALE_THRESHOLD = 1000;
 
-		// Power values that need to be checked for scaling (phases)
 		const powerPhaseGroups = {
 			active: ['ACT_POW_L1', 'ACT_POW_L2', 'ACT_POW_L3'],
 			reactive: ['REACT_POW_L1', 'REACT_POW_L2', 'REACT_POW_L3'],
 			apparent: ['APP_POW_L1', 'APP_POW_L2', 'APP_POW_L3']
 		};
 
-		// Store raw values for scaling logic
-		let rawSmartmeterData = {};
-
-		/**
-		 * Format active/reactive/apparent power with smart scaling
-		 * If any phase exceeds threshold, scale all to k-unit with 2 decimals, otherwise no decimals
-		 */
-		function formatPowerValue(value, isTotal = false) {
-			if (value === null || value === undefined) return '--';
-
-			value = parseFloat(value);
-
-			if (isTotal) {
-				// Total power is independent
-				if (value > POWER_SCALE_THRESHOLD) {
-					return (value / 1000).toFixed(2);
-				} else {
-					return Math.round(value).toString();
-				}
+		function formatBytes(bytes) {
+			if (bytes === null || bytes === undefined) return '--';
+			const units = ['B', 'KiB', 'MiB', 'GiB'];
+			let i = 0;
+			let value = parseFloat(bytes);
+			while (value >= 1024 && i < units.length - 1) {
+				value /= 1024;
+				i++;
 			}
-
-			return value; // Will be handled by phase group scaling
+			return value.toFixed(1) + ' ' + units[i];
 		}
 
-		/**
-		 * Update power values in a phase group with consistent unit scaling
-		 */
+		function formatPowerValue(value, isTotal = false) {
+			if (value === null || value === undefined) return '--';
+			value = parseFloat(value);
+			if (isTotal) {
+				return Math.abs(value) > POWER_SCALE_THRESHOLD ? (value / 1000).toFixed(2) : Math.round(value).toString();
+			}
+			return value;
+		}
+
 		function updatePowerPhaseGroup(groupKey, groupElements, dataSource) {
-			// Check if any phase exceeds threshold
 			let needsScaling = false;
-			const values = [];
 
 			for (const elementId of groupElements) {
 				const val = dataSource[elementId]?.now;
-				if (val !== undefined) {
-					values.push(parseFloat(val));
-					if (Math.abs(parseFloat(val)) > POWER_SCALE_THRESHOLD) {
-						needsScaling = true;
-					}
+				if (val !== undefined && Math.abs(parseFloat(val)) > POWER_SCALE_THRESHOLD) {
+					needsScaling = true;
 				}
 			}
 
-			// Update all phases with consistent unit
 			groupElements.forEach(elementId => {
 				const element = document.getElementById(elementId);
 				const val = dataSource[elementId]?.now;
 				if (element && val !== undefined) {
 					const numVal = parseFloat(val);
-					if (needsScaling) {
-						element.textContent = (numVal / 1000).toFixed(2);
-					} else {
-						element.textContent = Math.round(numVal).toString();
-					}
+					element.textContent = needsScaling ? (numVal / 1000).toFixed(2) : Math.round(numVal);
 				}
 			});
 
-			// Update unit display for phases
-			const unitElementIds = {
-				'active': 'ACT_POW_phases_unit',
-				'reactive': 'REACT_POW_phases_unit',
-				'apparent': 'APP_POW_phases_unit'
+			const unitMap = {
+				active: 'ACT_POW_phases_unit',
+				reactive: 'REACT_POW_phases_unit',
+				apparent: 'APP_POW_phases_unit'
 			};
 
-			const baseUnits = {
-				'active': 'W',
-				'reactive': 'VAR',
-				'apparent': 'VA'
-			};
-
-			const unitElement = document.getElementById(unitElementIds[groupKey]);
+			const baseUnits = { active: 'W', reactive: 'VAR', apparent: 'VA' };
+			const unitElement = document.getElementById(unitMap[groupKey]);
 			if (unitElement) {
 				unitElement.textContent = needsScaling ? 'k' + baseUnits[groupKey] : baseUnits[groupKey];
 			}
 		}
 
-		/**
-		 * Format energy counter from Wh to kWh with 1 decimal place
-		 */
-		function formatEnergy(value) {
-			if (value === null || value === undefined) return '--';
-			return (parseFloat(value) / 1000).toFixed(1);
-		}
+		function formatEnergy(v) { return v != null ? (parseFloat(v) / 1000).toFixed(1) : '--'; }
+		function f(v, d = 2) { return v != null ? parseFloat(v).toFixed(d) : '--'; }
 
-		/**
-		 * Format angle/phase with 1 decimal place
-		 */
-		function formatAngle(value) {
-			if (value === null || value === undefined) return '--';
-			return parseFloat(value).toFixed(1);
-		}
-
-		/**
-		 * Format power factor with 4 decimal places
-		 */
-		function formatPowerFactor(value) {
-			if (value === null || value === undefined) return '--';
-			return parseFloat(value).toFixed(4);
-		}
-
-		/**
-		 * Format voltage with 1 decimal place
-		 */
-		function formatVoltage(value) {
-			if (value === null || value === undefined) return '--';
-			return parseFloat(value).toFixed(1);
-		}
-
-		/**
-		 * Format current with 2 decimal places
-		 */
-		function formatCurrent(value) {
-			if (value === null || value === undefined) return '--';
-			return parseFloat(value).toFixed(2);
-		}
-
-		/**
-		 * Format frequency with 2 decimal places
-		 */
-		function formatFrequency(value) {
-			if (value === null || value === undefined) return '--';
-			return parseFloat(value).toFixed(2);
-		}
-
-		/**
-		 * Format MCU usage with 2 decimal places
-		 */
-		function formatMCUUsage(value) {
-			if (value === null || value === undefined) return '--';
-			return parseFloat(value).toFixed(2);
-		}
-
-		/**
-		 * Format WiFi RSSI without decimals
-		 */
-		function formatWifiRSSI(value) {
-			if (value === null || value === undefined) return '--';
-			return Math.round(parseFloat(value)).toString();
-		}
-
-		/**
-		 * Format temperature with 1 decimal place
-		 */
-		function formatTemperature(value) {
-			if (value === null || value === undefined) return '--';
-			return parseFloat(value).toFixed(1);
-		}
-
-		/**
-		 * Fetch smartmeter data from API and update HTML elements
-		 */
 		async function fetchSmartmeterData() {
-			try {
-				const response = await fetch(SMARTMETER_API);
-				if (!response.ok) {
-					console.error('Failed to fetch smartmeter data:', response.status);
-					return;
-				}
+			const res = await fetch(SMARTMETER_API);
+			const data = await res.json();
 
-				const data = await response.json();
-				rawSmartmeterData = data;
+			if (data.ACT_POW_TOT) {
+				const v = data.ACT_POW_TOT.now;
+				document.getElementById('ACT_POW_TOT').textContent = formatPowerValue(v, true);
+				document.getElementById('ACT_POW_TOT_unit').textContent = Math.abs(v) > POWER_SCALE_THRESHOLD ? 'kW' : 'W';
+				document.getElementById('power_arrow').textContent = v < 0 ? '⮕' : '⬅';
+			}
 
-				// Update active power total (independent scaling)
-				if (data.ACT_POW_TOT) {
-					const val = data.ACT_POW_TOT.now;
-					const element = document.getElementById('ACT_POW_TOT');
-					const unitElement = document.getElementById('ACT_POW_TOT_unit');
-					if (element && val !== undefined) {
-						const formatted = formatPowerValue(val, true);
-						element.textContent = formatted;
-						if (unitElement) {
-							unitElement.textContent = Math.abs(parseFloat(val)) > POWER_SCALE_THRESHOLD ? 'kW' : 'W';
-						}
+			updatePowerPhaseGroup('active', powerPhaseGroups.active, data);
+			updatePowerPhaseGroup('reactive', powerPhaseGroups.reactive, data);
+			updatePowerPhaseGroup('apparent', powerPhaseGroups.apparent, data);
 
-						// Update power flow direction arrow based on sign
-						const powerValue = parseFloat(val);
-						const arrowElement = document.getElementById('power_arrow');
-						if (arrowElement) {
-							if (powerValue < 0) {
-								arrowElement.textContent = '⮕'; // Export (right arrow)
-							} else {
-								arrowElement.textContent = '⬅'; // Import (left arrow)
-							}
-						}
-					}
-				}
+			if (data.REACT_POW_TOT) {
+				const v = data.REACT_POW_TOT.now;
+				document.getElementById('REACT_POW_TOT').textContent = formatPowerValue(v, true);
+				document.getElementById('REACT_POW_TOT_unit').textContent = Math.abs(v) > POWER_SCALE_THRESHOLD ? 'kVAR' : 'VAR';
+			}
 
-				// Update active power phases (grouped scaling)
-				updatePowerPhaseGroup('active', powerPhaseGroups.active, data);
+			if (data.APP_POW_TOT) {
+				const v = data.APP_POW_TOT.now;
+				document.getElementById('APP_POW_TOT').textContent = formatPowerValue(v, true);
+				document.getElementById('APP_POW_TOT_unit').textContent = Math.abs(v) > POWER_SCALE_THRESHOLD ? 'kVA' : 'VA';
+			}
 
-				// Update reactive power total (independent)
-				if (data.REACT_POW_TOT) {
-					const val = data.REACT_POW_TOT.now;
-					const element = document.getElementById('REACT_POW_TOT');
-					const unitElement = document.getElementById('REACT_POW_TOT_unit');
-					if (element && val !== undefined) {
-						const formatted = formatPowerValue(val, true);
-						element.textContent = formatted;
-						if (unitElement) {
-							unitElement.textContent = Math.abs(parseFloat(val)) > POWER_SCALE_THRESHOLD ? 'kVAR' : 'VAR';
-						}
-					}
-				}
+			['ACT_ENG_IMP', 'ACT_ENG_EXP'].forEach(id => {
+				if (data[id]) document.getElementById(id).textContent = formatEnergy(data[id].abs);
+			});
 
-				// Update reactive power phases (grouped)
-				updatePowerPhaseGroup('reactive', powerPhaseGroups.reactive, data);
+			['U_L1N', 'U_L2N', 'U_L3N', 'U_L1L2', 'U_L2L3', 'U_L3L1'].forEach(id => {
+				if (data[id]) document.getElementById(id).textContent = f(data[id].now, 1);
+			});
 
-				// Update apparent power total (independent)
-				if (data.APP_POW_TOT) {
-					const val = data.APP_POW_TOT.now;
-					const element = document.getElementById('APP_POW_TOT');
-					const unitElement = document.getElementById('APP_POW_TOT_unit');
-					if (element && val !== undefined) {
-						const formatted = formatPowerValue(val, true);
-						element.textContent = formatted;
-						if (unitElement) {
-							unitElement.textContent = Math.abs(parseFloat(val)) > POWER_SCALE_THRESHOLD ? 'kVA' : 'VA';
-						}
-					}
-				}
+			['I_L1', 'I_L2', 'I_L3'].forEach(id => {
+				if (data[id]) document.getElementById(id).textContent = f(data[id].now, 2);
+			});
 
-				// Update apparent power phases (grouped)
-				updatePowerPhaseGroup('apparent', powerPhaseGroups.apparent, data);
+			['PF_L1', 'PF_L2', 'PF_L3'].forEach(id => {
+				if (data[id]) document.getElementById(id).textContent = f(data[id].now, 4);
+			});
 
-				// Update energy counters (Wh to kWh)
-				['ACT_ENG_IMP', 'ACT_ENG_EXP'].forEach(elementId => {
-					if (data[elementId]) {
-						const element = document.getElementById(elementId);
-						if (element) {
-							element.textContent = formatEnergy(data[elementId].abs);
-						}
-					}
-				});
+			['ANG_I_L1', 'ANG_I_L2', 'ANG_I_L3', 'ANG_U_L1L2', 'ANG_U_L2L3', 'ANG_U_L3L1'].forEach(id => {
+				if (data[id]) document.getElementById(id).textContent = f(data[id].now, 1);
+			});
 
-				// Update voltages (1 decimal)
-				['U_L1N', 'U_L2N', 'U_L3N', 'U_L1L2', 'U_L2L3', 'U_L3L1'].forEach(elementId => {
-					if (data[elementId]) {
-						const element = document.getElementById(elementId);
-						if (element) {
-							element.textContent = formatVoltage(data[elementId].now);
-						}
-					}
-				});
+			if (data.FREQ) document.getElementById('FREQ').textContent = f(data.FREQ.now, 2);
 
-				// Update currents (2 decimals)
-				['I_L1', 'I_L2', 'I_L3'].forEach(elementId => {
-					if (data[elementId]) {
-						const element = document.getElementById(elementId);
-						if (element) {
-							element.textContent = formatCurrent(data[elementId].now);
-						}
-					}
-				});
-
-				// Update power factors (4 decimals)
-				['PF_TOT', 'PF_L1', 'PF_L2', 'PF_L3'].forEach(elementId => {
-					if (data[elementId]) {
-						const element = document.getElementById(elementId);
-						if (element) {
-							element.textContent = formatPowerFactor(data[elementId].now);
-						}
-					}
-				});
-
-				// Update phase angles U-I (1 decimal)
-				['ANG_I_L1', 'ANG_I_L2', 'ANG_I_L3'].forEach(elementId => {
-					if (data[elementId]) {
-						const element = document.getElementById(elementId);
-						if (element) {
-							element.textContent = formatAngle(data[elementId].now);
-						}
-					}
-				});
-
-				// Update phase angles U-U L-L (1 decimal)
-				['ANG_U_L1L2', 'ANG_U_L2L3', 'ANG_U_L3L1'].forEach(elementId => {
-					if (data[elementId]) {
-						const element = document.getElementById(elementId);
-						if (element) {
-							element.textContent = formatAngle(data[elementId].now);
-						}
-					}
-				});
-
-				// Update frequency (2 decimals)
-				if (data.FREQ) {
-					const element = document.getElementById('FREQ');
-					if (element) {
-						element.textContent = formatFrequency(data.FREQ.now);
-					}
-				}
-
-				// Update timestamp
-				if (data.time_last_update) {
-					const timestamp = new Date(data.time_last_update);
-					document.getElementById('time_last_update').textContent = timestamp.toLocaleString('de-DE');
-				}
-			} catch (error) {
-				console.error('Error fetching smartmeter data:', error);
+			if (data.time_last_update) {
+				document.getElementById('time_last_update').textContent =
+					new Date(data.time_last_update).toLocaleString('de-DE');
 			}
 		}
 
-		/**
-		 * Fetch system data from API and update HTML elements
-		 */
 		async function fetchSystemData() {
-			try {
-				const response = await fetch(SYSTEM_API);
-				if (!response.ok) {
-					console.error('Failed to fetch system data:', response.status);
-					return;
-				}
+			const res = await fetch(SYSTEM_API);
+			const data = await res.json();
 
-				const data = await response.json();
+			['MCU_USAGE_1MIN', 'MCU_USAGE_5MIN', 'MCU_USAGE_15MIN'].forEach(id => {
+				if (data[id]) document.getElementById(id).textContent = f(data[id].now);
+			});
 
-				// Update MCU usage (2 decimals)
-				if (data.MCU_USAGE) {
-					const element = document.getElementById('MCU_USAGE');
-					if (element) {
-						element.textContent = formatMCUUsage(data.MCU_USAGE.now);
-					}
-				}
+			if (data.RAM_USAGE_PERC) document.getElementById('RAM_USAGE_PERC').textContent = f(data.RAM_USAGE_PERC.now);
+			if (data.RAM_USAGE_BYTE) document.getElementById('RAM_USAGE_VALUE').textContent = formatBytes(data.RAM_USAGE_BYTE.now);
+			if (data.RAM_TOTAL_BYTE) document.getElementById('RAM_TOTAL_VALUE').textContent = formatBytes(data.RAM_TOTAL_BYTE.now);
 
-				// Update WiFi RSSI (no decimals)
-				if (data.WIFI_RSSI) {
-					const element = document.getElementById('WIFI_RSSI');
-					if (element) {
-						element.textContent = formatWifiRSSI(data.WIFI_RSSI.now);
-					}
-				}
-
-				// Update temperature (1 decimal)
-				if (data.TEMP) {
-					const element = document.getElementById('TEMP');
-					if (element) {
-						element.textContent = formatTemperature(data.TEMP.now);
-					}
-				}
-			} catch (error) {
-				console.error('Error fetching system data:', error);
-			}
+			if (data.WIFI_RSSI) document.getElementById('WIFI_RSSI').textContent = Math.round(data.WIFI_RSSI.now);
+			if (data.TEMP) document.getElementById('TEMP').textContent = f(data.TEMP.now, 1);
 		}
 
-		/**
-		 * Fetch all data and set up periodic updates
-		 */
 		function startDataSync() {
-			// Fetch immediately on page load
 			fetchSmartmeterData();
 			fetchSystemData();
-
-			// Set up interval for periodic updates (every 5 seconds)
 			setInterval(() => {
 				fetchSmartmeterData();
 				fetchSystemData();
 			}, API_INTERVAL);
 		}
 
-		// Start syncing data when page loads
 		document.addEventListener('DOMContentLoaded', startDataSync);
 	</script>
 </body>

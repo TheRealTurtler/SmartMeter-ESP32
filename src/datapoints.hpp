@@ -53,8 +53,16 @@ enum DATA_POINT_SMARTMETER
 
 enum DATA_POINT_SYSTEM
 {
-	DP_MCU_USAGE,
+	DP_MCU_USAGE_1MIN,
+	DP_MCU_USAGE_5MIN,
+	DP_MCU_USAGE_15MIN,
+
+	DP_RAM_TOTAL_BYTE,
+	DP_RAM_USAGE_BYTE,
+	DP_RAM_USAGE_PERC,
+
 	DP_WIFI_RSSI,
+
 	DP_TEMPERATURE,
 };
 
@@ -108,7 +116,15 @@ const std::map<DATA_POINT_SMARTMETER, std::string> gc_mapDataPointInfoSmartmeter
 
 const std::map<DATA_POINT_SYSTEM, std::string> gc_mapDataPointInfoSystem =
 {
-	{ DP_MCU_USAGE,               "MCU_USAGE" },
+	{ DP_MCU_USAGE_1MIN,          "MCU_USAGE_1MIN" },
+	{ DP_MCU_USAGE_5MIN,          "MCU_USAGE_5MIN" },
+	{ DP_MCU_USAGE_15MIN,         "MCU_USAGE_15MIN" },
+
+	{ DP_RAM_TOTAL_BYTE,          "RAM_TOTAL_BYTE" },
+	{ DP_RAM_USAGE_BYTE,          "RAM_USAGE_BYTE" },
+	{ DP_RAM_USAGE_PERC,          "RAM_USAGE_PERC" },
+
 	{ DP_WIFI_RSSI,               "WIFI_RSSI" },
+
 	{ DP_TEMPERATURE,             "TEMP" },
 };
