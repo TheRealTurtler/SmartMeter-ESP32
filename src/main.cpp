@@ -115,7 +115,7 @@ void setup()
 	client.setTimeoutReply((wd.getTimeout() - 1000) / 2);
 
 	// FIXME -> Settings UI
-	client.setServerHost("http://192.168.178.54");
+	//client.setServerHost("http://192.168.178.54");
 	client.setServerLocationSmartMeter("/smartmeter/api/upload/smartmeter.php");
 	client.setServerLocationSystem("/smartmeter/api/upload/system.php");
 

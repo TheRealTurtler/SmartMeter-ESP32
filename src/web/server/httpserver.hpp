@@ -24,11 +24,14 @@ private:
 
 	void getHome();
 	void getPing();
+	void getSettings();
 
 	// API
-	void getStatus();
-	void getSmartmeter();
-	void getSystem();
+	void getApiStatus();
+	void getApiSmartmeter();
+	void getApiSystem();
+	void getApiSettings();
+	void postApiSettings();
 
 	std::vector<std::string> convertToList(const std::string& str, const char delimiter);
 

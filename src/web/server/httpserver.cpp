@@ -13,12 +13,15 @@ HttpServer::HttpServer(const HttpAPI& api, const DataCollector& dc, uint16_t por
 
 void HttpServer::init()
 {
-	m_server.on("/", [this]() { this->getHome(); });
-	m_server.on("/ping", [this]() { this->getPing(); });
+	m_server.on("/", HTTP_GET, [this]() { this->getHome(); });
+	m_server.on("/ping", HTTP_GET, [this]() { this->getPing(); });
+	m_server.on("/settings", HTTP_GET, [this]() { this->getSettings(); });
 
-	m_server.on("/api/status", [this]() { this->getStatus(); });
-	m_server.on("/api/smartmeter", [this]() { this->getSmartmeter(); });
-	m_server.on("/api/system", [this]() { this->getSystem(); });
+	m_server.on("/api/status", HTTP_GET, [this]() { this->getApiStatus(); });
+	m_server.on("/api/smartmeter", HTTP_GET, [this]() { this->getApiSmartmeter(); });
+	m_server.on("/api/system", HTTP_GET, [this]() { this->getApiSystem(); });
+	m_server.on("/api/settings", HTTP_GET, [this]() { this->getApiSettings(); });
+	m_server.on("/api/settings", HTTP_POST, [this]() { this->postApiSettings(); });
 }
 
 void HttpServer::start()
@@ -53,37 +56,72 @@ void HttpServer::getPing()
 	m_server.send(200, "text/plain", "Pong");
 }
 
-void HttpServer::getStatus()
+void HttpServer::getSettings()
 {
-	Serial.println("HTTP GET STATUS");
+	Serial.println("HTTP GET SETTINGS");
+
+	if (Html::isCompressed)
+		m_server.sendHeader("Content-Encoding", "gzip");
+
+	m_server.send_P(200, PSTR("text/html; charset=utf-8"), Html::settings, Html::settings_len);
+}
+
+void HttpServer::getApiStatus()
+{
+	Serial.println("HTTP API GET STATUS");
 
 	const ArduinoJson::JsonDocument doc = m_api.buildJsonStatus();
 	sendJsonResponse(200, doc);
 }
 
-void HttpServer::getSmartmeter()
+void HttpServer::getApiSmartmeter()
 {
-	Serial.println("HTTP GET SMARTMETER");
+	Serial.println("HTTP API GET SMARTMETER");
 
 	std::vector<std::string> vecFilter;
 
-	if (m_server.hasArg("dp"))
-		vecFilter = convertToList(m_server.arg("dp").c_str(), ',');
+	if (m_server.hasArg("filter"))
+		vecFilter = convertToList(m_server.arg("filter").c_str(), ',');
 
 	const ArduinoJson::JsonDocument doc = m_api.buildJsonSmartmeter(DateTime::currentDateTime(), m_dc.getDataSmartMeter(), vecFilter);
 	sendJsonResponse(200, doc);
 }
 
-void HttpServer::getSystem()
+void HttpServer::getApiSystem()
 {
-	Serial.println("HTTP GET SYSTEM");
+	Serial.println("HTTP API GET SYSTEM");
 
 	std::vector<std::string> vecFilter;
 
-	if (m_server.hasArg("dp"))
-		vecFilter = convertToList(m_server.arg("dp").c_str(), ',');
+	if (m_server.hasArg("filter"))
+		vecFilter = convertToList(m_server.arg("filter").c_str(), ',');
 
 	const ArduinoJson::JsonDocument doc = m_api.buildJsonSystem(DateTime::currentDateTime(), m_dc.getDataSystem(), vecFilter);
+	sendJsonResponse(200, doc);
+}
+
+void HttpServer::getApiSettings()
+{
+	Serial.println("HTTP API GET SYSTEM");
+
+	std::vector<std::string> vecFilter;
+
+	if (m_server.hasArg("filter"))
+		vecFilter = convertToList(m_server.arg("filter").c_str(), ',');
+
+	const ArduinoJson::JsonDocument doc = m_api.buildJsonSettings(vecFilter);
+	sendJsonResponse(200, doc);
+}
+
+void HttpServer::postApiSettings()
+{
+	Serial.println("HTTP API POST SYSTEM");
+
+	// TODO
+
+	ArduinoJson::JsonDocument doc;
+	doc["status"] = "wip";
+
 	sendJsonResponse(200, doc);
 }
 

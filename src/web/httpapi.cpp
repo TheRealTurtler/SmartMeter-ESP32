@@ -99,3 +99,14 @@ ArduinoJson::JsonDocument HttpAPI::buildJsonSystem(const DateTime& dt, const Dat
 
 	return doc;
 }
+
+ArduinoJson::JsonDocument HttpAPI::buildJsonSettings(const std::vector<std::string>& vecFilter) const
+{
+	ArduinoJson::JsonDocument doc;
+
+	doc["status"] = "wip";
+
+	// TODO
+
+	return doc;
+}
