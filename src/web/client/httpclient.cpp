@@ -30,6 +30,7 @@ void HttpClient::update()
 	{
 		m_delayNext = m_delayRetry;
 		m_tsLast = millis();
+		return;
 	}
 
 	// In order to avoid watchdog timeouts only one request is sent per update()
