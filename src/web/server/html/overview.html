@@ -192,22 +192,32 @@
 
 		<!-- Active Power Section -->
 		<div class="block">
-			<div class="title">Leistung</div>
+			<div class="row">
+				<div class="card">
+					<h3>Leistung</h3>
+					<div class="value-big"><span id="ACT_POW_TOT">--</span> <span id="ACT_POW_TOT_unit">W</span></div>
 
-			<div class="value-big"><span id="ACT_POW_TOT">--</span> <span id="ACT_POW_TOT_unit">W</span></div>
+					<div style="text-align:center; font-size:32px; margin: 15px 0;">
+						🏠 <span id="power_arrow">⬅</span> 🔌
+					</div>
 
-			<!-- Power flow direction arrow -->
-			<div style="text-align:center; font-size:32px; margin-top:5px;">
-				🏠 <span id="power_arrow">⬅</span> 🔌
-			</div>
-
-			<!-- Phase boxes for individual power values -->
-			<div class="phase-boxes">
-				<div class="phase-box">L1<br><span id="ACT_POW_L1">--</span> <span id="ACT_POW_phases_unit">W</span>
-				</div>
-				<div class="phase-box">L2<br><span id="ACT_POW_L2">--</span> <span id="ACT_POW_phases_unit">W</span>
-				</div>
-				<div class="phase-box">L3<br><span id="ACT_POW_L3">--</span> <span id="ACT_POW_phases_unit">W</span>
+					<div style="display:flex; justify-content:space-around; text-align:center;">
+						<div>
+							<div class="value"><span id="ACT_POW_L1">--</span></div>
+							<div class="unit"><span id="ACT_POW_phases_unit">W</span></div>
+							<div class="sub-small">L1</div>
+						</div>
+						<div>
+							<div class="value"><span id="ACT_POW_L2">--</span></div>
+							<div class="unit"><span id="ACT_POW_phases_unit">W</span></div>
+							<div class="sub-small">L2</div>
+						</div>
+						<div>
+							<div class="value"><span id="ACT_POW_L3">--</span></div>
+							<div class="unit"><span id="ACT_POW_phases_unit">W</span></div>
+							<div class="sub-small">L3</div>
+						</div>
+					</div>
 				</div>
 			</div>
 		</div>
@@ -234,41 +244,76 @@
 			<div class="row">
 				<div class="card">
 					<h3>Scheinleistung</h3>
-					<div class="value"><span id="APP_POW_TOT">--</span></div>
-					<div class="unit"><span id="APP_POW_TOT_unit">VA</span></div>
-					<div class="sub-small">
-						L1: <span id="APP_POW_L1">--</span> <span id="APP_POW_phases_unit">VA</span><br>
-						L2: <span id="APP_POW_L2">--</span> <span id="APP_POW_phases_unit">VA</span><br>
-						L3: <span id="APP_POW_L3">--</span> <span id="APP_POW_phases_unit">VA</span>
+					<div class="value-big"><span id="APP_POW_TOT">--</span> <span id="APP_POW_TOT_unit">VA</span></div>
+					<div style="display:flex; justify-content:space-around; text-align:center;">
+						<div>
+							<div class="value"><span id="APP_POW_L1">--</span></div>
+							<div class="unit"><span id="APP_POW_phases_unit">VA</span></div>
+							<div class="sub-small">L1</div>
+						</div>
+						<div>
+							<div class="value"><span id="APP_POW_L2">--</span></div>
+							<div class="unit"><span id="APP_POW_phases_unit">VA</span></div>
+							<div class="sub-small">L2</div>
+						</div>
+						<div>
+							<div class="value"><span id="APP_POW_L3">--</span></div>
+							<div class="unit"><span id="APP_POW_phases_unit">VA</span></div>
+							<div class="sub-small">L3</div>
+						</div>
 					</div>
 				</div>
 
 				<div class="card">
 					<h3>Blindleistung</h3>
-					<div class="value"><span id="REACT_POW_TOT">--</span></div>
-					<div class="unit"><span id="REACT_POW_TOT_unit">VAR</span></div>
-					<div class="sub-small">
-						L1: <span id="REACT_POW_L1">--</span> <span id="REACT_POW_phases_unit">VAR</span><br>
-						L2: <span id="REACT_POW_L2">--</span> <span id="REACT_POW_phases_unit">VAR</span><br>
-						L3: <span id="REACT_POW_L3">--</span> <span id="REACT_POW_phases_unit">VAR</span>
+					<div class="value-big"><span id="REACT_POW_TOT">--</span> <span id="REACT_POW_TOT_unit">VAr</span>
+					</div>
+					<div style="display:flex; justify-content:space-around; text-align:center;">
+						<div>
+							<div class="value"><span id="REACT_POW_L1">--</span></div>
+							<div class="unit"><span id="REACT_POW_phases_unit">VAr</span></div>
+							<div class="sub-small">L1</div>
+						</div>
+						<div>
+							<div class="value"><span id="REACT_POW_L2">--</span></div>
+							<div class="unit"><span id="REACT_POW_phases_unit">VAr</span></div>
+							<div class="sub-small">L2</div>
+						</div>
+						<div>
+							<div class="value"><span id="REACT_POW_L3">--</span></div>
+							<div class="unit"><span id="REACT_POW_phases_unit">VAr</span></div>
+							<div class="sub-small">L3</div>
+						</div>
 					</div>
 				</div>
 
 				<div class="card">
 					<h3>Leistungsfaktor</h3>
-					<div class="two-column">
-						<div class="column">
-							<div class="sub-small">
-								L1: <span id="PF_L1">--</span><br>
-								L2: <span id="PF_L2">--</span><br>
-								L3: <span id="PF_L3">--</span>
+					<div style="display:flex; justify-content:space-around; text-align:center; margin-bottom: 15px;">
+						<div>
+							<div class="value"><span id="PF_L1">--</span></div>
+							<div class="sub-small">L1</div>
+						</div>
+						<div>
+							<div class="value"><span id="PF_L2">--</span></div>
+							<div class="sub-small">L2</div>
+						</div>
+						<div>
+							<div class="value"><span id="PF_L3">--</span></div>
+							<div class="sub-small">L3</div>
+						</div>
+					</div>
+					<div style="display:flex; justify-content:space-around; text-align:center;">
+						<div>
+							<div class="sub-small"><span id="ANG_I_L1" style="font-size: 12px; color: #999;">--</span>°
 							</div>
 						</div>
-						<div class="column">
-							<div class="sub-small">
-								<span id="ANG_I_L1">--</span> °<br>
-								<span id="ANG_I_L2">--</span> °<br>
-								<span id="ANG_I_L3">--</span> °
+						<div>
+							<div class="sub-small"><span id="ANG_I_L2" style="font-size: 12px; color: #999;">--</span>°
+							</div>
+						</div>
+						<div>
+							<div class="sub-small"><span id="ANG_I_L3" style="font-size: 12px; color: #999;">--</span>°
 							</div>
 						</div>
 					</div>
@@ -281,25 +326,48 @@
 			<div class="row">
 				<div class="card">
 					<h3>Spannungen</h3>
-					<div class="two-column">
-						<div class="column">
-							<div class="sub-small">
-								L1-N: <span id="U_L1N">--</span> V<br>
-								L2-N: <span id="U_L2N">--</span> V<br>
-								L3-N: <span id="U_L3N">--</span> V<br><br>
-								L1-L2: <span id="U_L1L2">--</span> V<br>
-								L2-L3: <span id="U_L2L3">--</span> V<br>
-								L3-L1: <span id="U_L3L1">--</span> V
+
+					<!-- L-N Voltages -->
+					<div style="margin-bottom: 20px;">
+						<div style="display:flex; justify-content:space-around; text-align:center;">
+							<div>
+								<div class="value"><span id="U_L1N">--</span></div>
+								<div class="unit">V</div>
+								<div class="sub-small">L1</div>
+							</div>
+							<div>
+								<div class="value"><span id="U_L2N">--</span></div>
+								<div class="unit">V</div>
+								<div class="sub-small">L2</div>
+							</div>
+							<div>
+								<div class="value"><span id="U_L3N">--</span></div>
+								<div class="unit">V</div>
+								<div class="sub-small">L3</div>
 							</div>
 						</div>
-						<div class="column">
-							<div class="sub-small">
-								<br>
-								<br>
-								<br><br>
-								<span id="ANG_U_L1L2">--</span> °<br>
-								<span id="ANG_U_L2L3">--</span> °<br>
-								<span id="ANG_U_L3L1">--</span> °
+					</div>
+
+					<!-- L-L Voltages with phase angles -->
+					<div>
+						<div style="display:flex; justify-content:space-around; text-align:center;">
+							<div>
+								<div class="value"><span id="U_L1L2">--</span></div>
+								<div class="unit">V</div>
+								<div class="sub-small">L1-L2<br><span id="ANG_U_L1L2"
+										style="font-size: 12px; color: #999;">--</span> °</div>
+							</div>
+							<div>
+								<div class="value"><span id="U_L2L3">--</span></div>
+								<div class="unit">V</div>
+								<div class="sub-small">L2-L3<br><span id="ANG_U_L2L3"
+										style="font-size: 12px; color: #999;">--</span> °</div>
+							</div>
+							<div>
+								<div class="value"><span id="U_L3L1">--</span></div>
+								<div class="unit">V</div>
+								<div class="sub-small">L3-L1<br><span id="ANG_U_L3L1"
+										style="font-size: 12px; color: #999;">--</span> °</div>
 							</div>
 						</div>
 					</div>
@@ -307,10 +375,22 @@
 
 				<div class="card">
 					<h3>Ströme</h3>
-					<div class="sub-small">
-						L1: <span id="I_L1">--</span> A<br>
-						L2: <span id="I_L2">--</span> A<br>
-						L3: <span id="I_L3">--</span> A
+					<div style="display:flex; justify-content:space-around; text-align:center;">
+						<div>
+							<div class="value"><span id="I_L1">--</span></div>
+							<div class="unit">A</div>
+							<div class="sub-small">L1</div>
+						</div>
+						<div>
+							<div class="value"><span id="I_L2">--</span></div>
+							<div class="unit">A</div>
+							<div class="sub-small">L2</div>
+						</div>
+						<div>
+							<div class="value"><span id="I_L3">--</span></div>
+							<div class="unit">A</div>
+							<div class="sub-small">L3</div>
+						</div>
 					</div>
 				</div>
 
@@ -463,7 +543,7 @@
 			if (data.REACT_POW_TOT) {
 				const v = data.REACT_POW_TOT.now;
 				document.getElementById('REACT_POW_TOT').textContent = formatPowerValue(v, true);
-				document.getElementById('REACT_POW_TOT_unit').textContent = Math.abs(v) > POWER_SCALE_THRESHOLD ? 'kVAR' : 'VAR';
+				document.getElementById('REACT_POW_TOT_unit').textContent = Math.abs(v) > POWER_SCALE_THRESHOLD ? 'kVAr' : 'VAr';
 			}
 
 			if (data.APP_POW_TOT) {
@@ -485,7 +565,7 @@
 			});
 
 			['PF_L1', 'PF_L2', 'PF_L3'].forEach(id => {
-				if (data[id]) document.getElementById(id).textContent = f(data[id].now, 4);
+				if (data[id]) document.getElementById(id).textContent = f(data[id].now, 3);
 			});
 
 			['ANG_I_L1', 'ANG_I_L2', 'ANG_I_L3', 'ANG_U_L1L2', 'ANG_U_L2L3', 'ANG_U_L3L1'].forEach(id => {
