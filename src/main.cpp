@@ -1,8 +1,5 @@
 #include <Arduino.h>
-//#include <WiFiManager.h>
-#include <WiFi.h>
 #include "time.h"
-
 #include "components/heartbeat.hpp"
 #include "components/watchdog.hpp"
 #include "components/timer.hpp"
@@ -10,15 +7,16 @@
 #include "web/server/httpserver.hpp"
 #include "smlreader.hpp"
 #include "system.hpp"
+#include "reset.hpp"
+#include "networking.hpp"
 
-// FIXME -> Settings UI
-#include "../secrets/wifi.h"
 
-
+// NOTE: LED_BUILTIN is wrong for ESP32-C3 Super Mini (evaluates to 7 instead of 8)
 constexpr uint8_t PIN_LED_BUILTIN = 8;
 constexpr uint8_t PIN_LED = 6;
 constexpr uint8_t PIN_RX = 20;
 constexpr uint8_t PIN_TX = 21;
+constexpr uint8_t PIN_BUTTON_RESET = BOOT_PIN;
 
 Watchdog wd(5000);
 Heartbeat hb(1000, PIN_LED, true);
@@ -32,75 +30,15 @@ HttpAPI api;
 HttpClient client(api, dc);
 HttpServer server(api, dc, 80);
 
-// TODO Move to separate file
-Timer timerWifi;
-wl_status_t wifiLastState = WL_DISCONNECTED;
-const char* const HOSTNAME = "ESP32-SmartMeter";
-
-
-void checkWifi()
-{
-	// TODO
-	if (false)
-	{
-		/*
-		// Initialize WiFiManager
-		WiFiManager wifiManager;
-
-		// Auto-connect to Wi-Fi with a portal if not configured
-		if (!wifiManager.autoConnect("ESP32-WiFi"))
-		{
-			Serial.println("Failed to connect and hit timeout");
-			ESP.restart();
-		}
-		*/
-	}
-	else
-	{
-		wl_status_t wifiState = WiFi.status();
-
-		//Serial.print("WiFi Status: ");
-		//Serial.print(wifiState);
-
-		if (wifiState == WL_CONNECTED)
-		{
-			const int32_t rssi = WiFi.RSSI();
-
-			if (wifiLastState != wifiState)
-			{
-				hb.pattern(Heartbeat::FAST_1, 3);
-				Serial.print(" --- WiFi connected. IP: ");
-				Serial.print(WiFi.localIP());
-				Serial.print(" Hostname: ");
-				Serial.println(WiFi.getHostname());
-
-				// FIXME NTP Time
-				// -> Should be called now and again to keep time accurate
-				// -> ESP32 keeps time after reset, but not after power loss
-				configTime(2 * 3600, 3600, "pool.ntp.org", "time.nist.gov", "time.google.com");
-
-				server.start();
-			}
-		}
-		else if (wifiState == WL_IDLE_STATUS
-			|| wifiState == WL_STOPPED
-			|| wifiState == WL_CONNECT_FAILED)
-		{
-			server.stop();
-
-			//Serial.print(" --- WiFi reconnecting ---");
-			WiFi.reconnect();
-		}
-
-		wifiLastState = wifiState;
-	}
-}
 
 void setup()
 {
 	// Heartbeat
 	hb.init();
 	hb.start();
+
+	// Reset Button with external pullup -> Logic level is inverted
+	Reset::init(3000, PIN_BUTTON_RESET, true);
 
 	// TODO Debug output
 	Serial.begin(9600);
@@ -114,20 +52,18 @@ void setup()
 	client.setTimeoutConnect((wd.getTimeout() - 1000) / 2);
 	client.setTimeoutReply((wd.getTimeout() - 1000) / 2);
 
-	// FIXME -> Settings UI
-	//client.setServerHost("http://192.168.178.54");
-	client.setServerLocationSmartMeter("/smartmeter/api/upload/smartmeter.php");
-	client.setServerLocationSystem("/smartmeter/api/upload/system.php");
-
 	server.init();
 
-	// TODO Start in AP-Mode and let User enter SSID and password
-	WiFi.setHostname(HOSTNAME);
-	WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
+	Networking* const net = Networking::init();
+	net->addCallbackConnect([]() { hb.pattern(Heartbeat::FAST_1, 3); });
+	net->addCallbackApStart([]() { hb.pattern(Heartbeat::FAST_1, 3); });
+	net->addCallbackConnect([]() { server.start(); });
+	net->addCallbackApStart([]() { server.start(); });
+	net->addCallbackDisconnect([]() { server.stop(); });
+	net->addCallbackApStop([]() { server.stop(); });
 
-	timerWifi.setInterval_s(5);
-	timerWifi.setCallback(checkWifi);
-	timerWifi.start();
+	server.addCallbackSettings([net]() { net->reload(); });
+	server.addCallbackSettings([]() { client.reload(); });
 
 	// Watchdog
 	wd.init();
@@ -147,8 +83,13 @@ void loop()
 	dc.updateDatapoint(DP_RAM_USAGE_BYTE, sys.getRamHeapSizeUsed());
 	dc.updateDatapoint(DP_RAM_USAGE_PERC, sys.getRamHeapSizePercent());
 
-	// FIXME
-	if (WiFi.status() == WL_CONNECTED)
+	Reset::getInstance()->update();
+
+	Networking* const net = Networking::getInstance();
+
+	net->update();
+
+	if (net->isWifiConnected())
 		dc.updateDatapoint(DP_WIFI_RSSI, WiFi.RSSI());
 
 	dc.updateDatapoint(DP_TEMPERATURE, sys.getTemperature());
@@ -163,8 +104,8 @@ void loop()
 	client.update();	// HTTP Client
 	server.update(); 	// HTTP Server
 
-	timerWifi.update();
-
+	// FIXME remove
+	// ---
 	static int test = 0;
 
 	if (++test % 1000 == 0)
@@ -187,4 +128,5 @@ void loop()
 		Serial.print(" Percent: ");
 		Serial.println(System::getRamHeapSizePercent());
 	}
+	// ---
 }

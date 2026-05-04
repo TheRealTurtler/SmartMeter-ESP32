@@ -11,12 +11,17 @@ class HttpClient
 public:
 	HttpClient(const HttpAPI& api, DataCollector& dc);
 
-	void init();
-	void update();
+	struct Settings
+	{
+		bool enable = false;
+		std::string serverHost;
+		std::string serverLocationSmartMeter;
+		std::string serverLocationSystem;
+	};
 
-	void setServerHost(const std::string& host) { m_serverHost = host; }
-	void setServerLocationSmartMeter(const std::string& location) { m_serverLocationSmartMeter = location; }
-	void setServerLocationSystem(const std::string& location) { m_serverLocationSystem = location; }
+	void init();
+	void reload();
+	void update();
 
 	void setTimeoutConnect(const int32_t& timeout) { m_timeoutConnect = timeout; }
 	void setTimeoutReply(uint16_t timeout) { m_timeoutReply = timeout; }
@@ -24,14 +29,16 @@ public:
 	void setDelayRequest(const uint32_t& delay) { m_delayRequest = delay; }
 	void setDelayRetry(const uint32_t& delay) { m_delayRetry = delay; }
 
+	static Settings loadSettings();
+	static void saveSettings(const Settings& settings);
+	static bool validateSettings(const Settings& settings);
+
 private:
 	const HttpAPI& m_api;
 
 	HTTPClient m_client;
 
-	std::string m_serverHost = "";
-	std::string m_serverLocationSmartMeter = "/";
-	std::string m_serverLocationSystem = "/";
+	Settings m_settings;
 
 	uint32_t m_tsLast = 0;
 	uint32_t m_delayNext = 1000;

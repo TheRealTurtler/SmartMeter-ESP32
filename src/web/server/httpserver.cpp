@@ -1,6 +1,7 @@
 #include "httpserver.hpp"
 #include "html.hpp"
 #include <sstream>
+#include "networking.hpp"
 
 
 HttpServer::HttpServer(const HttpAPI& api, const DataCollector& dc, uint16_t port):
@@ -15,6 +16,7 @@ void HttpServer::init()
 {
 	m_server.on("/", HTTP_GET, [this]() { this->getHome(); });
 	m_server.on("/ping", HTTP_GET, [this]() { this->getPing(); });
+	m_server.on("/overview", HTTP_GET, [this]() { this->getOverview(); });
 	m_server.on("/settings", HTTP_GET, [this]() { this->getSettings(); });
 
 	m_server.on("/api/status", HTTP_GET, [this]() { this->getApiStatus(); });
@@ -26,27 +28,52 @@ void HttpServer::init()
 
 void HttpServer::start()
 {
+	Serial.println("Starting HTTP Server...");
+
 	m_server.begin();
 }
 
 void HttpServer::stop()
 {
+	Serial.println("Stopping HTTP Server...");
+
 	m_server.stop();
 }
 
 void HttpServer::update()
 {
 	m_server.handleClient();
+
+	if (m_triggerSettingsCallbacks)
+	{
+		m_triggerSettingsCallbacks = false;
+
+		// Wait for a short time to ensure that the client receives the response
+		// -> Data is sent asynchronously
+		delay(500);
+
+		for (const auto& func : m_vecFuncSettings)
+		{
+			func();
+		}
+	}
+}
+
+void HttpServer::addCallbackSettings(const func_cb_settings& func)
+{
+	m_vecFuncSettings.push_back(func);
 }
 
 void HttpServer::getHome()
 {
 	Serial.println("HTTP GET HOME");
 
-	if (Html::isCompressed)
-		m_server.sendHeader("Content-Encoding", "gzip");
+	if (Networking::getInstance()->isConfigured())
+		m_server.sendHeader("Location", "/overview");
+	else
+		m_server.sendHeader("Location", "/settings");
 
-	m_server.send_P(200, PSTR("text/html; charset=utf-8"), Html::index, Html::index_len);
+	m_server.send(308, "text/plain", "");
 }
 
 void HttpServer::getPing()
@@ -54,6 +81,16 @@ void HttpServer::getPing()
 	Serial.println("HTTP GET PING");
 
 	m_server.send(200, "text/plain", "Pong");
+}
+
+void HttpServer::getOverview()
+{
+	Serial.println("HTTP GET OVERVIEW");
+
+	if (Html::isCompressed)
+		m_server.sendHeader("Content-Encoding", "gzip");
+
+	m_server.send_P(200, PSTR("text/html; charset=utf-8"), Html::overview, Html::overview_len);
 }
 
 void HttpServer::getSettings()
@@ -117,12 +154,18 @@ void HttpServer::postApiSettings()
 {
 	Serial.println("HTTP API POST SYSTEM");
 
-	// TODO
+	ArduinoJson::JsonDocument docReceived;
+	ArduinoJson::deserializeJson(docReceived, m_server.arg("plain"));
 
-	ArduinoJson::JsonDocument doc;
-	doc["status"] = "wip";
+	const ArduinoJson::JsonDocument docResponse = m_api.decodeJsonSettings(docReceived);
 
-	sendJsonResponse(200, doc);
+	if (docResponse["status"] == "ok")
+	{
+		sendJsonResponse(200, docResponse);
+		m_triggerSettingsCallbacks = true;
+	}
+	else
+		sendJsonResponse(400, docResponse);
 }
 
 std::vector<std::string> HttpServer::convertToList(const std::string& str, const char delimiter)

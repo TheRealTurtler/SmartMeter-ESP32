@@ -3,6 +3,7 @@
 #include <WebServer.h>
 #include "web/httpapi.hpp"
 #include "datacollector.hpp"
+#include <functional>
 
 
 class HttpServer
@@ -16,14 +17,22 @@ public:
 	void stop();
 	void update();
 
+	typedef std::function<void(void)> func_cb_settings;
+
+	void addCallbackSettings(const func_cb_settings& func);
+
 private:
 	const HttpAPI& m_api;
 	const DataCollector& m_dc;
 
 	WebServer m_server;
 
+	bool m_triggerSettingsCallbacks = false;
+	std::vector<func_cb_settings> m_vecFuncSettings;
+
 	void getHome();
 	void getPing();
+	void getOverview();
 	void getSettings();
 
 	// API

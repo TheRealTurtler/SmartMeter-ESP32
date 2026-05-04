@@ -1,5 +1,6 @@
 #include "httpclient.hpp"
 #include "system.hpp"
+#include "config/config_pushapi.hpp"
 
 #include "Arduino.h"
 
@@ -17,6 +18,30 @@ HttpClient::HttpClient(const HttpAPI& api, DataCollector& dc):
 void HttpClient::init()
 {
 	m_tsLast = millis();
+	reload();
+}
+
+void HttpClient::reload()
+{
+	const Settings settings = loadSettings();
+
+	if (validateSettings(settings))
+	{
+		m_settings = settings;
+	}
+	else
+	{
+		m_settings.enable = false;
+		m_settings.serverHost = "";
+		m_settings.serverLocationSmartMeter = "/";
+		m_settings.serverLocationSystem = "/";
+	}
+
+	if (!m_settings.enable)
+	{
+		m_mapDataSmartMeter.clear();
+		m_mapDataSystem.clear();
+	}
 }
 
 void HttpClient::update()
@@ -26,7 +51,7 @@ void HttpClient::update()
 	if (timeDiff < m_delayNext)
 		return;
 
-	if (m_serverHost == "")
+	if (!m_settings.enable || m_settings.serverHost == "")
 	{
 		m_delayNext = m_delayRetry;
 		m_tsLast = millis();
@@ -52,8 +77,53 @@ void HttpClient::update()
 	m_tsLast = millis();
 }
 
+HttpClient::Settings HttpClient::loadSettings()
+{
+	Config_PushAPI cfg;
+
+	Settings settings;
+	settings.enable = (cfg.getConfig(Config_PushAPI::ENABLE) == "true");
+	settings.serverHost = cfg.getConfig(Config_PushAPI::SERVER_HOST);
+	settings.serverLocationSmartMeter = cfg.getConfig(Config_PushAPI::SERVER_PATH_SMARTMETER);
+	settings.serverLocationSystem = cfg.getConfig(Config_PushAPI::SERVER_PATH_SYSTEM);
+
+	return settings;
+}
+
+void HttpClient::saveSettings(const Settings& settings)
+{
+	Config_PushAPI cfg;
+
+	cfg.setConfig(Config_PushAPI::ENABLE, (settings.enable ? "true" : "false"));
+	cfg.setConfig(Config_PushAPI::SERVER_HOST, settings.serverHost);
+	cfg.setConfig(Config_PushAPI::SERVER_PATH_SMARTMETER, settings.serverLocationSmartMeter);
+	cfg.setConfig(Config_PushAPI::SERVER_PATH_SYSTEM, settings.serverLocationSystem);
+}
+
+bool HttpClient::validateSettings(const Settings& settings)
+{
+	bool result = true;
+
+	if (settings.enable)
+	{
+		if (settings.serverHost.empty())
+			result = false;
+
+		if (settings.serverLocationSmartMeter.empty())
+			result = false;
+
+		if (settings.serverLocationSystem.empty())
+			result = false;
+	}
+
+	return result;
+}
+
 void HttpClient::callbackSmartmeter(const DateTime& dt, const DataSmartMeter& data)
 {
+	if (!m_settings.enable)
+		return;
+
 	// Remove oldest data if memory gets full
 	if (System::getRamHeapSizePercent() > 90.0f && !m_mapDataSmartMeter.empty())
 	{
@@ -73,6 +143,9 @@ void HttpClient::callbackSmartmeter(const DateTime& dt, const DataSmartMeter& da
 
 void HttpClient::callbackSystem(const DateTime& dt, const DataSystem& data)
 {
+	if (!m_settings.enable)
+		return;
+
 	// Remove oldest data if memory gets full
 	if (System::getRamHeapSizePercent() > 90.0f && !m_mapDataSystem.empty())
 	{
@@ -98,7 +171,7 @@ int8_t HttpClient::uploadSmartMeter()
 	{
 		const auto& it = m_mapDataSmartMeter.cbegin();
 
-		const std::string url = (m_serverHost + m_serverLocationSmartMeter);
+		const std::string url = (m_settings.serverHost + m_settings.serverLocationSmartMeter);
 		const ArduinoJson::JsonDocument doc = m_api.buildJsonSmartmeter(it->first, it->second);
 
 		if (uploadJson(url, doc))
@@ -121,7 +194,7 @@ int8_t HttpClient::uploadSystem()
 	{
 		const auto& it = m_mapDataSystem.cbegin();
 
-		const std::string url = (m_serverHost + m_serverLocationSystem);
+		const std::string url = (m_settings.serverHost + m_settings.serverLocationSystem);
 		const ArduinoJson::JsonDocument doc = m_api.buildJsonSystem(it->first, it->second);
 
 		if (uploadJson(url, doc))

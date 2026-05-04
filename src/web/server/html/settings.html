@@ -73,7 +73,6 @@
 			color: #aaa;
 		}
 
-		/* BUTTONS */
 		.button-row {
 			display: flex;
 			gap: 10px;
@@ -106,7 +105,6 @@
 			background: #c0392b;
 		}
 
-		/* SWITCH */
 		.switch {
 			position: relative;
 			width: 46px;
@@ -147,13 +145,11 @@
 			transform: translateX(22px);
 		}
 
-		/* GEFAHR */
 		.danger-block {
 			border: 2px solid #e74c3c;
 			background: #fff5f5;
 		}
 
-		/* OVERLAY */
 		.overlay {
 			position: fixed;
 			inset: 0;
@@ -190,12 +186,10 @@
 
 		<form id="settingsForm">
 
-			<!-- PUSH -->
+			<!-- PUSH API -->
 			<div class="block">
-
 				<div class="title-row">
 					<div class="title">Push API</div>
-
 					<label class="switch">
 						<input type="checkbox" id="push_enabled">
 						<span class="slider"></span>
@@ -203,22 +197,19 @@
 				</div>
 
 				<div id="push_box">
-
 					<label>Host</label>
-					<input id="push_host" placeholder="http://www.example.com">
+					<input id="push_host" placeholder="z.B. http://www.example.com">
 
 					<label>Smartmeter Endpoint</label>
-					<input id="push_path_smartmeter" placeholder="/upload/smartmeter">
+					<input id="push_path_smartmeter" placeholder="z.B. /upload/smartmeter">
 
 					<label>System Endpoint</label>
-					<input id="push_path_system" placeholder="/upload/system">
-
+					<input id="push_path_system" placeholder="z.B. /upload/system">
 				</div>
 			</div>
 
 			<!-- WLAN -->
 			<div class="block">
-
 				<div class="title">WLAN</div>
 
 				<label>SSID</label>
@@ -233,8 +224,12 @@
 					<option value="static">Statisch</option>
 				</select>
 
-				<div id="wifi_static" class="hidden">
+				<div id="wifi_dhcp" class="hidden">
+					<label>Gerätename</label>
+					<input id="wifi_hostname">
+				</div>
 
+				<div id="wifi_static" class="hidden">
 					<label>IP</label>
 					<input id="wifi_ip">
 
@@ -244,27 +239,65 @@
 					<label>Gateway</label>
 					<input id="wifi_gateway">
 
+					<label>DNS 1</label>
+					<input id="wifi_dns_1">
+
+					<label>DNS 2</label>
+					<input id="wifi_dns_2">
 				</div>
 			</div>
 
 			<!-- SYSTEM -->
 			<div class="block">
-
 				<div class="title">System</div>
 
-				<label>Gerätename</label>
-				<input id="device_name">
+				<label>NTP Server 1</label>
+				<input id="ntp_1" placeholder="z.B. pool.ntp.org">
 
-				<label>NTP Server</label>
-				<input id="ntp_server" placeholder="pool.ntp.org">
+				<label>NTP Server 2</label>
+				<input id="ntp_2">
 
-				<label>Zeitzone</label>
+				<label>NTP Server 3</label>
+				<input id="ntp_3">
+
+				<label>Zeitzone (GMT Offset)</label>
 				<select id="timezone">
-					<option value="UTC+0" selected>London (UTC+0)</option>
-					<option value="UTC+1">Berlin (UTC+1)</option>
-					<option value="UTC+9">Tokio (UTC+9)</option>
+					<option value="-43200">UTC−12</option>
+					<option value="-39600">UTC−11</option>
+					<option value="-36000">UTC−10</option>
+					<option value="-32400">UTC−9</option>
+					<option value="-28800">UTC−8</option>
+					<option value="-25200">UTC−7</option>
+					<option value="-21600">UTC−6</option>
+					<option value="-18000">UTC−5</option>
+					<option value="-14400">UTC−4</option>
+					<option value="-10800">UTC−3</option>
+					<option value="-7200">UTC−2</option>
+					<option value="-3600">UTC−1</option>
+					<option value="0">UTC±0</option>
+					<option value="3600">UTC+1</option>
+					<option value="7200">UTC+2</option>
+					<option value="10800">UTC+3</option>
+					<option value="14400">UTC+4</option>
+					<option value="18000">UTC+5</option>
+					<option value="21600">UTC+6</option>
+					<option value="25200">UTC+7</option>
+					<option value="28800">UTC+8</option>
+					<option value="32400">UTC+9</option>
+					<option value="36000">UTC+10</option>
+					<option value="39600">UTC+11</option>
+					<option value="43200">UTC+12</option>
+					<option value="46800">UTC+13</option>
+					<option value="50400">UTC+14</option>
 				</select>
 
+				<label>Sommerzeit (DST Offset)</label>
+				<select id="timezone_dst">
+					<option value="0">Keine DST</option>
+					<option value="1800">+30 Minuten</option>
+					<option value="3600">+1 Stunde</option>
+					<option value="7200">+2 Stunden</option>
+				</select>
 			</div>
 
 			<!-- SAVE -->
@@ -276,13 +309,10 @@
 
 			<!-- GEFAHR -->
 			<div class="block danger-block">
-
 				<div class="title" style="color:#e74c3c;">☢️ GEFAHR</div>
-
 				<button type="button" class="danger" onclick="factoryReset()">
 					Werkseinstellungen
 				</button>
-
 			</div>
 
 		</form>
@@ -290,7 +320,6 @@
 	</div>
 
 	<script>
-
 		function showOverlay(t) {
 			document.getElementById('overlayText').textContent = t;
 			document.getElementById('overlay').style.display = 'flex';
@@ -301,37 +330,52 @@
 		}
 
 		function updateUI() {
-
 			document.getElementById('push_box').classList.toggle(
 				'hidden',
 				!document.getElementById('push_enabled').checked
 			);
 
-			document.getElementById('wifi_static').classList.toggle(
-				'hidden',
-				document.getElementById('wifi_mode').value !== 'static'
-			);
+			const isDhcp = document.getElementById('wifi_mode').value === 'dhcp';
+			document.getElementById('wifi_dhcp').classList.toggle('hidden', !isDhcp);
+			document.getElementById('wifi_static').classList.toggle('hidden', isDhcp);
 		}
 
 		document.getElementById('push_enabled').addEventListener('change', updateUI);
 		document.getElementById('wifi_mode').addEventListener('change', updateUI);
 
-		/* LOAD */
+		// LOAD
 		async function load() {
-
 			showOverlay("Laden...");
 
 			try {
 				const r = await fetch('/api/settings');
 				const d = await r.json();
 
-				for (const k in d) {
-					const el = document.getElementById(k);
-					if (!el) continue;
+				// PUSH API
+				document.getElementById('push_enabled').checked = d.push_api.enable;
+				document.getElementById('push_host').value = d.push_api.server_host || "";
+				document.getElementById('push_path_smartmeter').value = d.push_api.server_path_smartmeter || "";
+				document.getElementById('push_path_system').value = d.push_api.server_path_system || "";
 
-					if (el.type === 'checkbox') el.checked = d[k];
-					else el.value = d[k];
-				}
+				// NETWORK
+				document.getElementById('wifi_ssid').value = d.network.ssid || "";
+				document.getElementById('wifi_password').value = d.network.password || "";
+				document.getElementById('wifi_mode').value = d.network.mode || "dhcp";
+				document.getElementById('wifi_hostname').value = d.network.hostname || "";
+
+				document.getElementById('wifi_ip').value = d.network.ip || "";
+				document.getElementById('wifi_subnet').value = d.network.subnet || "";
+				document.getElementById('wifi_gateway').value = d.network.gateway || "";
+				document.getElementById('wifi_dns_1').value = d.network.dns_1 || "";
+				document.getElementById('wifi_dns_2').value = d.network.dns_2 || "";
+
+				// SYSTEM
+				document.getElementById('ntp_1').value = d.system.ntp_1 || "";
+				document.getElementById('ntp_2').value = d.system.ntp_2 || "";
+				document.getElementById('ntp_3').value = d.system.ntp_3 || "";
+
+				document.getElementById('timezone').value = d.system.timezone_offset_gmt ?? "0";
+				document.getElementById('timezone_dst').value = d.system.timezone_offset_dst ?? "0";
 
 			} catch (e) {
 				alert("Fehler beim Laden");
@@ -341,28 +385,39 @@
 			updateUI();
 		}
 
-		/* SAVE */
+		// SAVE
 		document.getElementById('settingsForm').addEventListener('submit', async e => {
 			e.preventDefault();
 
 			showOverlay("Speichern...");
 
 			const data = {
-				push_enabled: document.getElementById('push_enabled').checked,
-				push_host: document.getElementById('push_host').value,
-				push_path_smartmeter: document.getElementById('push_path_smartmeter').value,
-				push_path_system: document.getElementById('push_path_system').value,
+				network: {
+					ssid: document.getElementById('wifi_ssid').value,
+					password: document.getElementById('wifi_password').value,
+					mode: document.getElementById('wifi_mode').value,
+					hostname: document.getElementById('wifi_hostname').value,
+					ip: document.getElementById('wifi_ip').value,
+					subnet: document.getElementById('wifi_subnet').value,
+					gateway: document.getElementById('wifi_gateway').value,
+					dns_1: document.getElementById('wifi_dns_1').value,
+					dns_2: document.getElementById('wifi_dns_2').value
+				},
 
-				wifi_ssid: document.getElementById('wifi_ssid').value,
-				wifi_password: document.getElementById('wifi_password').value,
-				wifi_mode: document.getElementById('wifi_mode').value,
-				wifi_ip: document.getElementById('wifi_ip').value,
-				wifi_subnet: document.getElementById('wifi_subnet').value,
-				wifi_gateway: document.getElementById('wifi_gateway').value,
+				system: {
+					ntp_1: document.getElementById('ntp_1').value,
+					ntp_2: document.getElementById('ntp_2').value,
+					ntp_3: document.getElementById('ntp_3').value,
+					timezone_offset_gmt: parseInt(document.getElementById('timezone').value, 10),
+					timezone_offset_dst: parseInt(document.getElementById('timezone_dst').value, 10)
+				},
 
-				device_name: document.getElementById('device_name').value,
-				ntp_server: document.getElementById('ntp_server').value,
-				timezone: document.getElementById('timezone').value
+				push_api: {
+					enable: document.getElementById('push_enabled').checked,
+					server_host: document.getElementById('push_host').value,
+					server_path_smartmeter: document.getElementById('push_path_smartmeter').value,
+					server_path_system: document.getElementById('push_path_system').value
+				}
 			};
 
 			try {
@@ -384,24 +439,26 @@
 			}
 		});
 
-		/* RESET */
+		// RESET
 		async function factoryReset() {
-
 			if (!confirm("Werkseinstellungen wirklich laden?")) return;
 
 			showOverlay("Reset...");
 
-			await fetch('/api/settings', {
-				method: 'POST',
-				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify({ factory_reset: true })
-			});
+			try {
+				await fetch('/api/settings', {
+					method: 'POST',
+					headers: { 'Content-Type': 'application/json' },
+					body: JSON.stringify({ factory_reset: true })
+				});
+			} catch (e) {
+				// ignore
+			}
 
 			location.reload();
 		}
 
 		document.addEventListener('DOMContentLoaded', load);
-
 	</script>
 
 </body>

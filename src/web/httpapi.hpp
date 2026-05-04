@@ -4,6 +4,7 @@
 #include <vector>
 #include <string>
 #include <functional>
+#include <unordered_map>
 
 #include "datacollector.hpp"
 
@@ -20,5 +21,7 @@ public:
 	ArduinoJson::JsonDocument buildJsonStatus() const;
 	ArduinoJson::JsonDocument buildJsonSmartmeter(const DateTime& dt, const DataSmartMeter& data, const std::vector<std::string>& vecFilter = { }) const;
 	ArduinoJson::JsonDocument buildJsonSystem(const DateTime& dt, const DataSystem& data, const std::vector<std::string>& vecFilter = { }) const;
+
 	ArduinoJson::JsonDocument buildJsonSettings(const std::vector<std::string>& vecFilter = { }) const;
+	ArduinoJson::JsonDocument decodeJsonSettings(const ArduinoJson::JsonDocument& docReceived) const;
 };
