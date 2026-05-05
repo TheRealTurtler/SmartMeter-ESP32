@@ -526,7 +526,7 @@
 		function f(v, d = 2) { return v != null ? parseFloat(v).toFixed(d) : '--'; }
 
 		async function fetchSmartmeterData() {
-			const res = await fetch(SMARTMETER_API);
+			const res = await fetch(SMARTMETER_API, { signal: AbortSignal.timeout(3000) });
 			const data = await res.json();
 
 			if (data.ACT_POW_TOT) {
@@ -581,7 +581,7 @@
 		}
 
 		async function fetchSystemData() {
-			const res = await fetch(SYSTEM_API);
+			const res = await fetch(SYSTEM_API, { signal: AbortSignal.timeout(3000) });
 			const data = await res.json();
 
 			['MCU_USAGE_1MIN', 'MCU_USAGE_5MIN', 'MCU_USAGE_15MIN'].forEach(id => {
