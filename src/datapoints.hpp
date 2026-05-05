@@ -53,6 +53,8 @@ enum DATA_POINT_SMARTMETER
 
 enum DATA_POINT_SYSTEM
 {
+	DP_UPTIME,
+
 	DP_MCU_USAGE_1MIN,
 	DP_MCU_USAGE_5MIN,
 	DP_MCU_USAGE_15MIN,
@@ -116,6 +118,8 @@ const std::map<DATA_POINT_SMARTMETER, std::string> gc_mapDataPointInfoSmartmeter
 
 const std::map<DATA_POINT_SYSTEM, std::string> gc_mapDataPointInfoSystem =
 {
+	{ DP_UPTIME,                  "UPTIME" },
+
 	{ DP_MCU_USAGE_1MIN,          "MCU_USAGE_1MIN" },
 	{ DP_MCU_USAGE_5MIN,          "MCU_USAGE_5MIN" },
 	{ DP_MCU_USAGE_15MIN,         "MCU_USAGE_15MIN" },

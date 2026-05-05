@@ -438,6 +438,11 @@
 				</div>
 
 				<div class="card">
+					<h3>Betriebszeit</h3>
+					<div class="value"><span id="UPTIME">--</span></div>
+				</div>
+
+				<div class="card">
 					<h3>WiFi RSSI</h3>
 					<div class="value"><span id="WIFI_RSSI">--</span></div>
 					<div class="unit">dBm</div>
@@ -479,6 +484,27 @@
 				i++;
 			}
 			return value.toFixed(1) + ' ' + units[i];
+		}
+
+		function formatUptime(seconds) {
+			if (seconds === null || seconds === undefined) return '--';
+			seconds = Math.floor(parseFloat(seconds));
+
+			const days = Math.floor(seconds / 86400);
+			const hours = Math.floor((seconds % 86400) / 3600);
+			const minutes = Math.floor((seconds % 3600) / 60);
+			const secs = seconds % 60;
+
+			const pad = (num) => String(num).padStart(2, '0');
+
+			if (days > 0) {
+				const dayLabel = days === 1 ? 'Tag' : 'Tage';
+				return `${days} ${dayLabel} ${pad(hours)}:${pad(minutes)}:${pad(secs)}`;
+			} else if (hours > 0) {
+				return `${pad(hours)}:${pad(minutes)}:${pad(secs)}`;
+			} else {
+				return `${pad(minutes)}:${pad(secs)}`;
+			}
 		}
 
 		function formatPowerValue(value, isTotal = false) {
@@ -585,15 +611,16 @@
 			const data = await res.json();
 
 			['MCU_USAGE_1MIN', 'MCU_USAGE_5MIN', 'MCU_USAGE_15MIN'].forEach(id => {
-				if (data[id]) document.getElementById(id).textContent = f(data[id].now);
+				if (data[id]) document.getElementById(id).textContent = f(data[id].abs);
 			});
 
 			if (data.RAM_USAGE_PERC) document.getElementById('RAM_USAGE_PERC').textContent = f(data.RAM_USAGE_PERC.now);
 			if (data.RAM_USAGE_BYTE) document.getElementById('RAM_USAGE_VALUE').textContent = formatBytes(data.RAM_USAGE_BYTE.now);
-			if (data.RAM_TOTAL_BYTE) document.getElementById('RAM_TOTAL_VALUE').textContent = formatBytes(data.RAM_TOTAL_BYTE.now);
+			if (data.RAM_TOTAL_BYTE) document.getElementById('RAM_TOTAL_VALUE').textContent = formatBytes(data.RAM_TOTAL_BYTE.abs);
 
 			if (data.WIFI_RSSI) document.getElementById('WIFI_RSSI').textContent = Math.round(data.WIFI_RSSI.now);
 			if (data.TEMP) document.getElementById('TEMP').textContent = f(data.TEMP.now, 1);
+			if (data.UPTIME) document.getElementById('UPTIME').textContent = formatUptime(data.UPTIME.abs);
 		}
 
 		function startDataSync() {

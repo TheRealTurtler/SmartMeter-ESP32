@@ -339,7 +339,9 @@ void Networking::onConnect()
 	Serial.print(" --- WiFi connected. IP: ");
 	Serial.print(WiFi.localIP());
 	Serial.print(" Hostname: ");
-	Serial.println(WiFi.getHostname());
+	Serial.print(WiFi.getHostname());
+	Serial.print(" MAC: ");
+	Serial.println(WiFi.macAddress());
 
 	for (const auto& func : m_vecFuncConnect)
 	{

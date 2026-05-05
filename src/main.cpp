@@ -78,11 +78,13 @@ void loop()
 {
 	sys.update();
 
+	dc.updateDatapoint(DP_UPTIME, std::chrono::duration_cast<std::chrono::seconds>(sys.getUptime()).count(), false);
+
 	dc.updateDatapoint(DP_MCU_USAGE_1MIN, sys.getMcuUsage1min(), false);
 	dc.updateDatapoint(DP_MCU_USAGE_5MIN, sys.getMcuUsage5min(), false);
 	dc.updateDatapoint(DP_MCU_USAGE_15MIN, sys.getMcuUsage15min(), false);
 
-	dc.updateDatapoint(DP_RAM_TOTAL_BYTE, sys.getRamHeapSizeTotal());
+	dc.updateDatapoint(DP_RAM_TOTAL_BYTE, sys.getRamHeapSizeTotal(), false);
 	dc.updateDatapoint(DP_RAM_USAGE_BYTE, sys.getRamHeapSizeUsed());
 	dc.updateDatapoint(DP_RAM_USAGE_PERC, sys.getRamHeapSizePercent());
 

@@ -101,8 +101,14 @@ ArduinoJson::JsonDocument HttpAPI::buildJsonSystem(const std::chrono::system_clo
 				continue;
 
 			ArduinoJson::JsonObject obj = doc[key].to<JsonObject>();
-			obj["now"] = mv.getValueNow();
-			obj["avg"] = mv.getValueAverage();
+
+			if (dp == DP_UPTIME || dp == DP_MCU_USAGE_1MIN || dp == DP_MCU_USAGE_5MIN || dp == DP_MCU_USAGE_15MIN || dp == DP_RAM_TOTAL_BYTE)
+				obj["abs"] = mv.getValueNow();
+			else
+			{
+				obj["now"] = mv.getValueNow();
+				obj["avg"] = mv.getValueAverage();
+			}
 		}
 	}
 
