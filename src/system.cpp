@@ -8,7 +8,7 @@
 #endif
 
 
-System::System(const uint32_t& timeoutWatchdog):
+System::System(const std::chrono::milliseconds& timeoutWatchdog):
 	m_timeoutWatchdog(timeoutWatchdog)
 {
 
@@ -21,7 +21,9 @@ System::~System()
 
 void System::init()
 {
-	m_timeLast = micros();
+	const auto timeNow = std::chrono::steady_clock::now();
+	m_timeStartup = timeNow;
+	m_timeLastUsageUpdate = timeNow;
 }
 
 void System::update()
@@ -31,11 +33,10 @@ void System::update()
 
 size_t System::getRamHeapSizeTotal()
 {
-	uint32_t result = 0;
+	size_t result = 0;
 
 #ifdef ESP32
 	result = heap_caps_get_total_size(MALLOC_CAP_DEFAULT);
-
 #endif
 
 	return result;
@@ -43,7 +44,7 @@ size_t System::getRamHeapSizeTotal()
 
 size_t System::getRamHeapSizeFree()
 {
-	uint32_t result = 0;
+	size_t result = 0;
 
 #ifdef ESP32
 	result = heap_caps_get_free_size(MALLOC_CAP_DEFAULT);
@@ -82,25 +83,25 @@ float System::getTemperature()
 	return temperatureRead();
 }
 
+std::chrono::nanoseconds System::getUptime()
+{
+	const auto timeNow = std::chrono::steady_clock::now();
+	return (timeNow - m_timeStartup);
+}
+
 void System::updateMcuUsage()
 {
-	const unsigned long timeNow = micros();
-	const unsigned long timeDiff = (timeNow - m_timeLast);
-	m_timeLast = timeNow;
+	const auto timeNow = std::chrono::steady_clock::now();
+	const auto timeDiff = std::chrono::duration<float>(timeNow - m_timeLastUsageUpdate);
+	m_timeLastUsageUpdate = timeNow;
 
 	// MCU Usage calculated from last loop time and Watchdog timeout
 	// -> 100% means that the loop() takes as long as the Watchdog timeout, which would cause a reset
-	const float mcuUsage = (100.0f * timeDiff) / (m_timeoutWatchdog * 1000.0f);
+	const float mcuUsage = (timeDiff / m_timeoutWatchdog * 100.0f);
 
-	const float dt = (timeDiff / 1000.0f / 1000.0f);
-
-	const float tau1 = 60.0f;		// 1 min
-	const float tau5 = 300.0f;		// 5 min
-	const float tau15 = 900.0f;		// 15 min
-
-	const float a1 = 1.0f - expf(-dt / tau1);
-	const float a5 = 1.0f - expf(-dt / tau5);
-	const float a15 = 1.0f - expf(-dt / tau15);
+	const float a1 = 1.0f - expf(-timeDiff / std::chrono::minutes(1));
+	const float a5 = 1.0f - expf(-timeDiff / std::chrono::minutes(5));
+	const float a15 = 1.0f - expf(-timeDiff / std::chrono::minutes(15));
 
 	m_mcuUsage_1min += a1 * (mcuUsage - m_mcuUsage_1min);
 	m_mcuUsage_5min += a5 * (mcuUsage - m_mcuUsage_5min);

@@ -7,10 +7,6 @@
 #include "components/timer.hpp"
 
 
-using SteadyClock = std::chrono::steady_clock;
-using SteadyTimePoint = std::chrono::time_point<SteadyClock>;
-
-
 class Networking
 {
 public:
@@ -87,7 +83,7 @@ private:
 	bool m_configured = false;
 	bool m_started = false;
 
-	SteadyTimePoint m_timeLastSyncNtp = SteadyTimePoint();
+	std::chrono::steady_clock::time_point m_timeLastSyncNtp;
 	std::chrono::hours m_intervalSyncNtp;
 
 	void updateWifi();

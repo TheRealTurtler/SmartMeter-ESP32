@@ -1,18 +1,19 @@
 #pragma once
 
 #include <stdint.h>
+#include <chrono>
 
 class Watchdog
 {
 public:
-	Watchdog(uint32_t timeoutMs);
+	Watchdog(const std::chrono::milliseconds& timeout);
 	~Watchdog() = default;
 
 	void init();
 	void update();
 
-	uint32_t& getTimeout() { return m_timeoutMs; }
+	const std::chrono::milliseconds& getTimeout() { return m_timeout; }
 
 private:
-	uint32_t m_timeoutMs;
+	std::chrono::milliseconds m_timeout;
 };

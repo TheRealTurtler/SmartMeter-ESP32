@@ -4,6 +4,7 @@
 #include "datacollector.hpp"
 #include <HTTPClient.h>
 #include <string>
+#include <chrono>
 
 
 class HttpClient
@@ -23,11 +24,13 @@ public:
 	void reload();
 	void update();
 
-	void setTimeoutConnect(const int32_t& timeout) { m_timeoutConnect = timeout; }
-	void setTimeoutReply(uint16_t timeout) { m_timeoutReply = timeout; }
+	void setEnableUpload(bool enable) { m_enableUpload = enable; }
 
-	void setDelayRequest(const uint32_t& delay) { m_delayRequest = delay; }
-	void setDelayRetry(const uint32_t& delay) { m_delayRetry = delay; }
+	void setTimeoutConnect(const std::chrono::milliseconds& timeout) { m_timeoutConnect = timeout; }
+	void setTimeoutReply(const std::chrono::milliseconds& timeout) { m_timeoutReply = timeout; }
+
+	void setDelayRequest(const std::chrono::milliseconds& delay) { m_delayRequest = delay; }
+	void setDelayRetry(const std::chrono::milliseconds& delay) { m_delayRetry = delay; }
 
 	static Settings loadSettings();
 	static void saveSettings(const Settings& settings);
@@ -40,20 +43,22 @@ private:
 
 	Settings m_settings;
 
-	uint32_t m_tsLast = 0;
-	uint32_t m_delayNext = 1000;
+	bool m_enableUpload = false;
 
-	uint32_t m_delayRequest = 500;
-	uint32_t m_delayRetry = (5 * 1000);
+	std::chrono::steady_clock::time_point m_timeLast;
+	std::chrono::milliseconds m_delayNext = std::chrono::seconds(1);
 
-	int32_t m_timeoutConnect = (1 * 1000);
-	uint16_t m_timeoutReply = (1 * 1000);
+	std::chrono::milliseconds m_delayRequest = std::chrono::milliseconds(500);
+	std::chrono::milliseconds m_delayRetry = std::chrono::seconds(5);
 
-	std::map<DateTime, DataSmartMeter> m_mapDataSmartMeter;
-	std::map<DateTime, DataSystem> m_mapDataSystem;
+	std::chrono::milliseconds m_timeoutConnect = std::chrono::seconds(1);;
+	std::chrono::milliseconds m_timeoutReply = std::chrono::seconds(1);
 
-	void callbackSmartmeter(const DateTime& dt, const DataSmartMeter& data);
-	void callbackSystem(const DateTime& dt, const DataSystem& data);
+	std::map<std::chrono::system_clock::time_point, DataSmartMeter> m_mapDataSmartMeter;
+	std::map<std::chrono::system_clock::time_point, DataSystem> m_mapDataSystem;
+
+	void callbackSmartmeter(const std::chrono::system_clock::time_point& tp, const DataSmartMeter& data);
+	void callbackSystem(const std::chrono::system_clock::time_point& tp, const DataSystem& data);
 
 	int8_t uploadSmartMeter();
 	int8_t uploadSystem();

@@ -9,6 +9,7 @@
 #include "system.hpp"
 #include "reset.hpp"
 #include "networking.hpp"
+#include <chrono>
 
 
 // NOTE: LED_BUILTIN is wrong for ESP32-C3 Super Mini (evaluates to 7 instead of 8)
@@ -18,12 +19,12 @@ constexpr uint8_t PIN_RX = 20;
 constexpr uint8_t PIN_TX = 21;
 constexpr uint8_t PIN_BUTTON_RESET = BOOT_PIN;
 
-Watchdog wd(5000);
-Heartbeat hb(1000, PIN_LED, true);
+Watchdog wd(std::chrono::seconds(5));
+Heartbeat hb(std::chrono::seconds(1), PIN_LED, true);
 
 System sys(wd.getTimeout());
 
-DataCollector dc(DataCollector::AVG_1_MIN);
+DataCollector dc(std::chrono::minutes(1));
 SMLReader sml(&dc, Serial1, PIN_RX, PIN_TX);
 
 HttpAPI api;
@@ -38,7 +39,7 @@ void setup()
 	hb.start();
 
 	// Reset Button with external pullup -> Logic level is inverted
-	Reset::init(3000, PIN_BUTTON_RESET, true);
+	Reset::init(std::chrono::seconds(3), PIN_BUTTON_RESET, true);
 
 	// TODO Debug output
 	Serial.begin(9600);
@@ -49,8 +50,8 @@ void setup()
 	api.init();
 
 	client.init();
-	client.setTimeoutConnect((wd.getTimeout() - 1000) / 2);
-	client.setTimeoutReply((wd.getTimeout() - 1000) / 2);
+	client.setTimeoutConnect((wd.getTimeout() - std::chrono::seconds(1)) / 2);
+	client.setTimeoutReply((wd.getTimeout() - std::chrono::seconds(1)) / 2);
 
 	server.init();
 
@@ -61,6 +62,8 @@ void setup()
 	net->addCallbackApStart([]() { server.start(); });
 	net->addCallbackDisconnect([]() { server.stop(); });
 	net->addCallbackApStop([]() { server.stop(); });
+	net->addCallbackConnect([]() { client.setEnableUpload(true); });
+	net->addCallbackDisconnect([]() { client.setEnableUpload(false); });
 
 	server.addCallbackSettings([net]() { net->reload(); });
 	server.addCallbackSettings([]() { client.reload(); });

@@ -41,6 +41,8 @@ SMLReader::SMLReader(DataCollector* const dc, HardwareSerial& serial, uint8_t pi
 
 void SMLReader::init()
 {
+	m_timeLastUpdate = std::chrono::steady_clock::now();
+
 	Serial1.begin(9600, SERIAL_8N1, m_pinRx, m_pinTx, true);
 }
 
@@ -95,7 +97,7 @@ bool SMLReader::readByte(unsigned char byte)
 	{
 	case SML_START:
 		m_mapValues.clear();
-		m_tsLastUpdate = micros();
+		m_timeLastUpdate = std::chrono::steady_clock::now();
 		break;
 
 	case SML_LISTEND:
@@ -140,7 +142,7 @@ bool SMLReader::readByte(unsigned char byte)
 			}
 
 			m_dc->calcDerivedValues();
-			m_dc->setTsLastUpdateSmartmeter(m_tsLastUpdate);
+			m_dc->setTimeLastUpdateSmartmeter(m_timeLastUpdate);
 		}
 	}
 

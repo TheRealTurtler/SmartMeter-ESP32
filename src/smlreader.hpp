@@ -4,6 +4,7 @@
 #include <functional>
 #include <sml.h>
 #include "datacollector.hpp"
+#include <chrono>
 
 
 class SMLReader
@@ -31,7 +32,7 @@ private:
 	static const std::vector<ObisData> m_vecObisData;
 
 	std::map<DATA_POINT_SMARTMETER, double> m_mapValues;
-	unsigned long m_tsLastUpdate = 0;
+	std::chrono::steady_clock::time_point m_timeLastUpdate;
 
 	bool readByte(unsigned char byte);
 	void obisHandler(const ObisData& obisValue);

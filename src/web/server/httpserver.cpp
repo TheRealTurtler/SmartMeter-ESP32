@@ -2,6 +2,7 @@
 #include "html.hpp"
 #include <sstream>
 #include "networking.hpp"
+#include <chrono>
 
 
 HttpServer::HttpServer(const HttpAPI& api, const DataCollector& dc, uint16_t port):
@@ -120,7 +121,8 @@ void HttpServer::getApiSmartmeter()
 	if (m_server.hasArg("filter"))
 		vecFilter = convertToList(m_server.arg("filter").c_str(), ',');
 
-	const ArduinoJson::JsonDocument doc = m_api.buildJsonSmartmeter(DateTime::currentDateTime(), m_dc.getDataSmartMeter(), vecFilter);
+	const auto timeNow = std::chrono::system_clock::now();
+	const ArduinoJson::JsonDocument doc = m_api.buildJsonSmartmeter(timeNow, m_dc.getDataSmartMeter(), vecFilter);
 	sendJsonResponse(200, doc);
 }
 
@@ -133,7 +135,8 @@ void HttpServer::getApiSystem()
 	if (m_server.hasArg("filter"))
 		vecFilter = convertToList(m_server.arg("filter").c_str(), ',');
 
-	const ArduinoJson::JsonDocument doc = m_api.buildJsonSystem(DateTime::currentDateTime(), m_dc.getDataSystem(), vecFilter);
+	const auto timeNow = std::chrono::system_clock::now();
+	const ArduinoJson::JsonDocument doc = m_api.buildJsonSystem(timeNow, m_dc.getDataSystem(), vecFilter);
 	sendJsonResponse(200, doc);
 }
 

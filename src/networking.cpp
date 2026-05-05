@@ -9,10 +9,11 @@ Networking* Networking::m_instance = nullptr;
 
 Networking::Networking()
 {
+	m_timeLastSyncNtp = std::chrono::steady_clock::time_point();
 	m_intervalSyncNtp = std::chrono::hours(24);
 
-	m_timerWifi.setInterval_s(5);
-	m_timerWifi.setCallback([this]() { this->updateWifi(); });
+	m_timerWifi.setInterval(std::chrono::seconds(5));
+	m_timerWifi.addCallback([this]() { this->updateWifi(); });
 	m_timerWifi.start();
 }
 
@@ -253,7 +254,7 @@ void Networking::reload()
 		WiFi.begin(settings.ssid.c_str(), settings.password.c_str());
 
 		// Force NTP sync on next connect
-		m_timeLastSyncNtp = SteadyTimePoint();
+		m_timeLastSyncNtp = std::chrono::steady_clock::time_point();
 	}
 	else
 	{
@@ -315,9 +316,9 @@ void Networking::updateWifiAp()
 
 void Networking::checkNtp()
 {
-	const SteadyTimePoint timeNow = SteadyClock::now();
+	const std::chrono::steady_clock::time_point timeNow = std::chrono::steady_clock::now();
 
-	if (timeNow - m_timeLastSyncNtp > m_intervalSyncNtp || m_timeLastSyncNtp == SteadyTimePoint())
+	if (timeNow - m_timeLastSyncNtp > m_intervalSyncNtp || m_timeLastSyncNtp == std::chrono::steady_clock::time_point())
 		syncNtp();
 }
 
@@ -330,7 +331,7 @@ void Networking::syncNtp()
 	struct tm timeinfo;
 
 	if (getLocalTime(&timeinfo, 500))
-		m_timeLastSyncNtp = SteadyClock::now();
+		m_timeLastSyncNtp = std::chrono::steady_clock::now();
 }
 
 void Networking::onConnect()

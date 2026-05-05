@@ -1,5 +1,4 @@
 #include "httpapi.hpp"
-#include "components/datetime.hpp"
 #include "networking.hpp"
 #include "web/client/httpclient.hpp"
 #include "config/config.hpp"
@@ -28,22 +27,26 @@ ArduinoJson::JsonDocument HttpAPI::buildJsonStatus() const
 	return doc;
 }
 
-ArduinoJson::JsonDocument HttpAPI::buildJsonSmartmeter(const DateTime& dt, const DataSmartMeter& data, const std::vector<std::string>& vecFilter) const
+ArduinoJson::JsonDocument HttpAPI::buildJsonSmartmeter(const std::chrono::system_clock::time_point& tp, const DataSmartMeter& data, const std::vector<std::string>& vecFilter) const
 {
 	ArduinoJson::JsonDocument doc;
 
-	if (data.tsLastUpdate > 0)
+	if (data.timeLastUpdate != std::chrono::steady_clock::time_point())
 	{
+		const auto millisDataset = std::chrono::duration_cast<std::chrono::milliseconds>(tp.time_since_epoch());
+
 		doc["status"] = "ok";
-		doc["time_dataset"] = dt.toMSecsSinceEpoch();
+		doc["time_dataset"] = millisDataset.count();
 
-		const unsigned long tsNow = micros();
-		const long tsDelta = tsNow - data.tsLastUpdate;
+		const auto timeNowSteady = std::chrono::steady_clock::now();
+		const auto timeNowSystem = std::chrono::system_clock::now();
 
-		const DateTime dtNow = DateTime::currentDateTime();
-		const DateTime dtLastUpdate = dtNow.addUSecs(-tsDelta);
+		const auto timeDiff = (timeNowSteady - data.timeLastUpdate);
+		const auto timeLastUpdate = (timeNowSystem - timeDiff);
 
-		doc["time_last_update"] = dtLastUpdate.toMSecsSinceEpoch();
+		const auto millisLastUpdate = std::chrono::duration_cast<std::chrono::milliseconds>(timeLastUpdate.time_since_epoch());
+
+		doc["time_last_update"] = millisLastUpdate.count();
 
 		for (const auto& [dp, mv] : data.mapData)
 		{
@@ -75,14 +78,17 @@ ArduinoJson::JsonDocument HttpAPI::buildJsonSmartmeter(const DateTime& dt, const
 	return doc;
 }
 
-ArduinoJson::JsonDocument HttpAPI::buildJsonSystem(const DateTime& dt, const DataSystem& data, const std::vector<std::string>& vecFilter) const
+ArduinoJson::JsonDocument HttpAPI::buildJsonSystem(const std::chrono::system_clock::time_point& tp, const DataSystem& data, const std::vector<std::string>& vecFilter) const
 {
 	ArduinoJson::JsonDocument doc;
 
-	doc["status"] = "ok";
-	doc["time_dataset"] = dt.toMSecsSinceEpoch();
+	const auto timeNowSystem = std::chrono::system_clock::now();
+	const auto millisNow = std::chrono::duration_cast<std::chrono::milliseconds>(timeNowSystem.time_since_epoch());
+	const auto millisDataset = std::chrono::duration_cast<std::chrono::milliseconds>(tp.time_since_epoch());
 
-	doc["time_now"] = DateTime::currentMSecsSinceEpoch();
+	doc["status"] = "ok";
+	doc["time_dataset"] = millisDataset.count();
+	doc["time_now"] = millisNow.count();
 
 	for (const auto& [dp, mv] : data.mapData)
 	{

@@ -7,10 +7,10 @@
 Reset* Reset::m_instance = nullptr;
 
 
-Reset::Reset(const unsigned long& delay_ms, uint8_t pin, bool inverted):
+Reset::Reset(const std::chrono::milliseconds& delay, uint8_t pin, bool inverted):
 	m_pin(pin),
 	m_inverted(inverted),
-	m_delay_ms(delay_ms)
+	m_delay(delay)
 {
 	// Set pin to input mode
 	// -> No pullup / pulldown necessary because an external one is used
@@ -20,13 +20,15 @@ Reset::Reset(const unsigned long& delay_ms, uint8_t pin, bool inverted):
 
 	// Only arm reset button when state is LOW
 	m_armed = (!m_pinState);
+
+	m_timeLastChange = std::chrono::steady_clock::now();
 }
 
-void Reset::init(const unsigned long& delay_ms, uint8_t pin, bool inverted)
+void Reset::init(const std::chrono::milliseconds& delay, uint8_t pin, bool inverted)
 {
 	if (!m_instance)
 	{
-		m_instance = new Reset(delay_ms, pin, inverted);
+		m_instance = new Reset(delay, pin, inverted);
 		attachInterrupt(digitalPinToInterrupt(pin), handlePinChange, CHANGE);
 	}
 }
@@ -49,9 +51,10 @@ void Reset::update()
 
 		if (m_pinState)
 		{
-			const unsigned long timeDiff = (millis() - m_timeLastChange);
+			const auto timeNow = std::chrono::steady_clock::now();
+			const auto timeDiff = (timeNow - m_timeLastChange);
 
-			if (timeDiff > m_delay_ms)
+			if (timeDiff > m_delay)
 			{
 				Serial.println("!!!!! RESET TRIGGERED !!!!!");
 
@@ -76,7 +79,7 @@ void Reset::updatePinState()
 	const bool rawState = digitalRead(m_pin);
 
 	m_pinState = (m_inverted ? !rawState : rawState);
-	m_timeLastChange = millis();
+	m_timeLastChange = std::chrono::steady_clock::now();
 }
 
 void Reset::reboot()

@@ -1,6 +1,8 @@
 #pragma once
 
 #include <functional>
+#include <chrono>
+#include <vector>
 
 class Timer
 {
@@ -10,18 +12,14 @@ public:
 
 	typedef std::function<void(void)> callback_fc;
 
-	void setCallback(callback_fc callback);
+	void addCallback(const callback_fc& callback);
 
-	void setSingleShot(bool singleshot);
+	void setSingleShot(bool singleshot) { m_singleshot = singleshot; }
 
-	void setInterval_us(const unsigned long& interval);
-	void setInterval_ms(const unsigned long& interval);
-	void setInterval_s(const unsigned long& interval);
+	void setInterval(const std::chrono::nanoseconds& interval) { m_interval = interval; }
 
 	void start();
-	void start_us(const unsigned long& interval);
-	void start_ms(const unsigned long& interval);
-	void start_s(const unsigned long& interval);
+	void start(const std::chrono::nanoseconds& interval);
 	void stop();
 
 	void update();
@@ -32,8 +30,8 @@ private:
 	bool m_started = false;
 	bool m_singleshot = false;
 
-	callback_fc m_callback;
+	std::vector<callback_fc> m_vecFuncCallbacks;
 
-	unsigned long m_interval = 0;
-	unsigned long m_timeLast = 0;
+	std::chrono::nanoseconds m_interval = std::chrono::nanoseconds(0);
+	std::chrono::steady_clock::time_point m_timeLast;
 };

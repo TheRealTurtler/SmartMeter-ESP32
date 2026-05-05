@@ -8,8 +8,8 @@
 HttpClient::HttpClient(const HttpAPI& api, DataCollector& dc):
 	m_api(api)
 {
-	auto cbSmartmeter = [this](const DateTime& dt, const DataSmartMeter& data) { this->callbackSmartmeter(dt, data); };
-	auto cbSystem = [this](const DateTime& dt, const DataSystem& data) { this->callbackSystem(dt, data); };
+	auto cbSmartmeter = [this](const std::chrono::system_clock::time_point& tp, const DataSmartMeter& data) { this->callbackSmartmeter(tp, data); };
+	auto cbSystem = [this](const std::chrono::system_clock::time_point& tp, const DataSystem& data) { this->callbackSystem(tp, data); };
 
 	dc.setCallbackSmartmeter(cbSmartmeter);
 	dc.setCallbackSystem(cbSystem);
@@ -17,7 +17,7 @@ HttpClient::HttpClient(const HttpAPI& api, DataCollector& dc):
 
 void HttpClient::init()
 {
-	m_tsLast = millis();
+	m_timeLast = std::chrono::steady_clock::now();
 	reload();
 }
 
@@ -46,15 +46,16 @@ void HttpClient::reload()
 
 void HttpClient::update()
 {
-	const uint32_t timeDiff = (millis() - m_tsLast);
+	const auto timeNow = std::chrono::steady_clock::now();
+	const auto timeDiff = (timeNow - m_timeLast);
 
 	if (timeDiff < m_delayNext)
 		return;
 
-	if (!m_settings.enable || m_settings.serverHost == "")
+	if (!m_settings.enable || m_settings.serverHost == "" || !m_enableUpload)
 	{
 		m_delayNext = m_delayRetry;
-		m_tsLast = millis();
+		m_timeLast = timeNow;
 		return;
 	}
 
@@ -64,17 +65,17 @@ void HttpClient::update()
 
 	if (!handleResult(uploadSmartMeter()))
 	{
-		m_tsLast = millis();
+		m_timeLast = timeNow;
 		return;
 	}
 
 	if (!handleResult(uploadSystem()))
 	{
-		m_tsLast = millis();
+		m_timeLast = timeNow;
 		return;
 	}
 
-	m_tsLast = millis();
+	m_timeLast = timeNow;
 }
 
 HttpClient::Settings HttpClient::loadSettings()
@@ -119,7 +120,7 @@ bool HttpClient::validateSettings(const Settings& settings)
 	return result;
 }
 
-void HttpClient::callbackSmartmeter(const DateTime& dt, const DataSmartMeter& data)
+void HttpClient::callbackSmartmeter(const std::chrono::system_clock::time_point& tp, const DataSmartMeter& data)
 {
 	if (!m_settings.enable)
 		return;
@@ -127,21 +128,20 @@ void HttpClient::callbackSmartmeter(const DateTime& dt, const DataSmartMeter& da
 	// Remove oldest data if memory gets full
 	if (System::getRamHeapSizePercent() > 90.0f && !m_mapDataSmartMeter.empty())
 	{
-		const DateTime dt = m_mapDataSmartMeter.cbegin()->first;
+		const auto tpData = m_mapDataSmartMeter.cbegin()->first;
 
-		Serial.print("SM - Removing Data from: ");
-		Serial.println(dt.toString("%Y-%m-%d %H:%M:%S").c_str());
+		Serial.println("SM - Removing Oldest Data");
 
-		m_mapDataSmartMeter.erase(dt);
+		m_mapDataSmartMeter.erase(tpData);
 
-		if (m_mapDataSystem.contains(dt))
-			m_mapDataSystem.erase(dt);
+		if (m_mapDataSystem.contains(tpData))
+			m_mapDataSystem.erase(tpData);
 	}
 
-	m_mapDataSmartMeter[dt] = data;
+	m_mapDataSmartMeter[tp] = data;
 }
 
-void HttpClient::callbackSystem(const DateTime& dt, const DataSystem& data)
+void HttpClient::callbackSystem(const std::chrono::system_clock::time_point& tp, const DataSystem& data)
 {
 	if (!m_settings.enable)
 		return;
@@ -149,18 +149,17 @@ void HttpClient::callbackSystem(const DateTime& dt, const DataSystem& data)
 	// Remove oldest data if memory gets full
 	if (System::getRamHeapSizePercent() > 90.0f && !m_mapDataSystem.empty())
 	{
-		const DateTime dt = m_mapDataSystem.cbegin()->first;
+		const auto tpData = m_mapDataSystem.cbegin()->first;
 
-		Serial.print("SYS - Removing Data from: ");
-		Serial.println(dt.toString("%Y-%m-%d %H:%M:%S").c_str());
+		Serial.print("SYS - Removing Oldest Data");
 
-		m_mapDataSystem.erase(dt);
+		m_mapDataSystem.erase(tpData);
 
-		if (m_mapDataSmartMeter.contains(dt))
-			m_mapDataSmartMeter.erase(dt);
+		if (m_mapDataSmartMeter.contains(tpData))
+			m_mapDataSmartMeter.erase(tpData);
 	}
 
-	m_mapDataSystem[dt] = data;
+	m_mapDataSystem[tp] = data;
 }
 
 int8_t HttpClient::uploadSmartMeter()
@@ -222,8 +221,8 @@ bool HttpClient::uploadJson(const std::string& url, const ArduinoJson::JsonDocum
 	m_client.begin(url.c_str());
 	m_client.addHeader("Content-Type", "application/json");
 
-	m_client.setConnectTimeout(m_timeoutConnect);
-	m_client.setTimeout(m_timeoutReply);
+	m_client.setConnectTimeout(m_timeoutConnect.count());
+	m_client.setTimeout(m_timeoutReply.count());
 
 	const int httpResponseCode = m_client.POST(strJson.c_str());
 

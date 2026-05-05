@@ -10,52 +10,20 @@ Timer::~Timer()
 	stop();
 }
 
-void Timer::setCallback(callback_fc callback)
+void Timer::addCallback(const callback_fc& callback)
 {
-	m_callback = callback;
-}
-
-void Timer::setSingleShot(bool singleshot)
-{
-	m_singleshot = singleshot;
-}
-
-void Timer::setInterval_us(const unsigned long& interval)
-{
-	m_interval = interval;
-}
-
-void Timer::setInterval_ms(const unsigned long& interval)
-{
-	setInterval_us(interval * 1000UL);
-}
-
-void Timer::setInterval_s(const unsigned long& interval)
-{
-	setInterval_us(interval * 1000UL * 1000UL);
+	m_vecFuncCallbacks.push_back(callback);
 }
 
 void Timer::start()
 {
-	m_timeLast = micros();
+	m_timeLast = std::chrono::steady_clock::now();
 	m_started = true;
 }
 
-void Timer::start_us(const unsigned long& interval)
+void Timer::start(const std::chrono::nanoseconds& interval)
 {
-	setInterval_us(interval);
-	start();
-}
-
-void Timer::start_ms(const unsigned long& interval)
-{
-	setInterval_ms(interval);
-	start();
-}
-
-void Timer::start_s(const unsigned long& interval)
-{
-	setInterval_s(interval);
+	setInterval(interval);
 	start();
 }
 
@@ -69,21 +37,19 @@ void Timer::update()
 	if (!m_started)
 		return;
 
-	const unsigned long time_us = micros();
-
-	unsigned long timeDiff = 0;
-
-	if (m_timeLast > time_us)
-		timeDiff = (ULONG_MAX - time_us + time_us);
-	else
-		timeDiff = (time_us - m_timeLast);
+	const auto timeNow = std::chrono::steady_clock::now();
+	const auto timeDiff = (timeNow - m_timeLast);
 
 	if (timeDiff > m_interval)
 	{
 		if (m_singleshot)
 			stop();
 
-		m_timeLast = time_us;
-		m_callback();
+		m_timeLast = timeNow;
+
+		for (const auto& func : m_vecFuncCallbacks)
+		{
+			func();
+		}
 	}
 }

@@ -16,11 +16,11 @@ IEC62065::IEC62065(HardwareSerial& serial, unsigned long interval_ms, uint8_t pi
 	auto cbPause = [this]() { this->callbackPause(); };
 	auto cbTimeout = [this]() { this->callbackTimeout(); };
 
-	m_timerPause.setCallback(cbPause);
-	m_timerPause.setInterval_ms(1000);
+	m_timerPause.addCallback(cbPause);
+	m_timerPause.setInterval(std::chrono::milliseconds(1000));
 
-	m_timerTimeout.setCallback(cbTimeout);
-	m_timerTimeout.setInterval_ms(500);
+	m_timerTimeout.addCallback(cbTimeout);
+	m_timerTimeout.setInterval(std::chrono::milliseconds(500));
 }
 
 IEC62065::~IEC62065()

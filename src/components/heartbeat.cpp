@@ -2,14 +2,14 @@
 #include <Arduino.h>
 
 
-Heartbeat::Heartbeat(unsigned long interval_ms, uint8_t pin, bool inverted):
+Heartbeat::Heartbeat(const std::chrono::milliseconds& interval, uint8_t pin, bool inverted):
 	m_pin(pin),
 	m_inverted(inverted)
 {
 	auto cb = [this]() { this->callbackHeartbeat(); };
 
-	m_timer.setCallback(cb);
-	m_timer.setInterval_ms(interval_ms);
+	m_timer.addCallback(cb);
+	m_timer.setInterval(interval);
 }
 
 void Heartbeat::init()

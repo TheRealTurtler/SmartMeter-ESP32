@@ -1,11 +1,12 @@
 #pragma once
 
 #include "timer.hpp"
+#include <chrono>
 
 class Heartbeat
 {
 public:
-	explicit Heartbeat(unsigned long interval_ms, uint8_t pin, bool inverted = false);
+	explicit Heartbeat(const std::chrono::milliseconds& interval, uint8_t pin, bool inverted = false);
 	~Heartbeat() = default;
 
 	enum PATTERN

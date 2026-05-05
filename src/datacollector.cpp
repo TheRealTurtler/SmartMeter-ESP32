@@ -6,8 +6,8 @@
 #include <Arduino.h>
 
 
-DataCollector::DataCollector(AVG_INTERVAL avgInterval):
-	m_avgInterval_us(avgInterval * 60 * 1000 * 1000)
+DataCollector::DataCollector(const std::chrono::milliseconds& avgInterval):
+	m_avgInterval(avgInterval)
 {
 
 }
@@ -16,14 +16,16 @@ void DataCollector::init()
 {
 	auto cb = [this]() { this->callbackAverage(); };
 
-	m_timerAverage.setCallback(cb);
+	m_timerAverage.addCallback(cb);
 	m_timerAverage.setSingleShot(true);
 }
 
 void DataCollector::start()
 {
-	m_dtLastAverage = roundDateTime(DateTime::currentDateTime());
-	m_timerAverage.start_s(10);
+	const auto timeNow = std::chrono::system_clock::now();
+	m_timeLastAverage = roundTimePoint(timeNow);
+
+	m_timerAverage.start(std::chrono::seconds(10));
 }
 
 void DataCollector::update()
@@ -51,26 +53,27 @@ void DataCollector::calcDerivedValues()
 
 void DataCollector::callbackAverage()
 {
-	const DateTime dtNow = DateTime::currentDateTime();
-	DateTime dtNext = m_dtLastAverage.addUSecs(m_avgInterval_us);
+	const auto timeNow = std::chrono::system_clock::now();
+	auto timeNext = (m_timeLastAverage + m_avgInterval);
 
-	if (dtNow >= dtNext)
+	if (timeNow >= timeNext)
 	{
 		Serial.println("Taking Averages...");
 
 		if (m_cbSmartmeter)
-			m_cbSmartmeter(dtNext, m_dataSmartMeter);
+			m_cbSmartmeter(timeNext, m_dataSmartMeter);
 
 		if (m_cbSystem)
-			m_cbSystem(dtNext, m_dataSystem);
+			m_cbSystem(timeNext, m_dataSystem);
 
 		resetAverage();
-
-		m_dtLastAverage = roundDateTime(dtNow);
-		dtNext = m_dtLastAverage.addUSecs(m_avgInterval_us);
 	}
 
-	m_timerAverage.start_us(dtNow.uSecsTo(dtNext) + 1000);
+	m_timeLastAverage = roundTimePoint(timeNow);
+	timeNext = (m_timeLastAverage + m_avgInterval);
+
+	const auto timeDiff = (timeNext - timeNow);
+	m_timerAverage.start(timeDiff + std::chrono::milliseconds(1));
 }
 
 void DataCollector::resetAverage()
@@ -81,12 +84,10 @@ void DataCollector::resetAverage()
 	}
 }
 
-DateTime DataCollector::roundDateTime(const DateTime& dt) const
+std::chrono::system_clock::time_point DataCollector::roundTimePoint(const std::chrono::system_clock::time_point& tp) const
 {
-	int64_t ts = dt.toUSecsSinceEpoch() / m_avgInterval_us;
-	ts *= m_avgInterval_us;
-
-	return (DateTime::fromUSecsSinceEpoch(ts));
+	const auto timeRounded = (tp.time_since_epoch() / m_avgInterval) * m_avgInterval;
+	return std::chrono::system_clock::time_point(timeRounded);
 }
 
 void DataCollector::calcDerivedVoltage()
