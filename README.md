@@ -129,8 +129,8 @@ src/
 ├── datacollector.cpp        # Meter data collection and storage
 ├── smlreader.cpp            # SML protocol parsing
 ├── iec62056.cpp             # Unused (IEC62056 protocol for older meters)
-├── networking.cpp           # WiFi connectivity and WiFiManager
-├── reset.cpp                # Reset and factory reset handling
+├── networking.cpp           # WiFi connectivity and NTP updates
+├── reset.cpp                # Factory reset handling
 ├── system.cpp               # System health and uptime tracking
 ├── components/              # Core system components
 │   ├── watchdog.cpp         # Watchdog timer
