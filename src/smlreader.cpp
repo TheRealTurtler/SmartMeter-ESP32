@@ -1,5 +1,4 @@
 #include "smlreader.hpp"
-
 #include <Arduino.h>
 
 
@@ -79,9 +78,7 @@ void SMLReader::update()
 				readByte(c);
 
 				// FIXME remove
-				//char buffer[3] = { 0 };
-				//sprintf(buffer, "%02x", received);
-				//Serial.print(buffer);
+				log_v("Received byte: %02x", c);
 			}
 		}
 	}
@@ -114,20 +111,14 @@ bool SMLReader::readByte(unsigned char byte)
 
 	case SML_UNEXPECTED:
 	{
-		char buffer[3] = { 0 };
-		sprintf(buffer, "%02x", byte);
-
-		Serial.print(F(">>> Unexpected byte: "));
-		Serial.print(buffer);
-		Serial.println();
-
+		log_w("Unexpected byte: %02x", byte);
 		result = false;
 	}
 	break;
 
 	case SML_FINAL:
 	{
-		Serial.println(F(">>> Successfully received a complete message!"));
+		log_i(">>> Successfully received a complete message!");
 
 		if (m_dc)
 		{

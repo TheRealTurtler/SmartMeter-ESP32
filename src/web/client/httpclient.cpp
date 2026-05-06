@@ -1,8 +1,7 @@
 #include "httpclient.hpp"
+#include "Arduino.h"
 #include "system.hpp"
 #include "config/config_pushapi.hpp"
-
-#include "Arduino.h"
 
 
 HttpClient::HttpClient(const HttpAPI& api, DataCollector& dc):
@@ -65,17 +64,17 @@ void HttpClient::update()
 
 	if (!handleResult(uploadSmartMeter()))
 	{
-		m_timeLast = timeNow;
+		m_timeLast = std::chrono::steady_clock::now();
 		return;
 	}
 
 	if (!handleResult(uploadSystem()))
 	{
-		m_timeLast = timeNow;
+		m_timeLast = std::chrono::steady_clock::now();
 		return;
 	}
 
-	m_timeLast = timeNow;
+	m_timeLast = std::chrono::steady_clock::now();
 }
 
 HttpClient::Settings HttpClient::loadSettings()
@@ -128,10 +127,9 @@ void HttpClient::callbackSmartmeter(const std::chrono::system_clock::time_point&
 	// Remove oldest data if memory gets full
 	if (System::getRamHeapSizePercent() > 90.0f && !m_mapDataSmartMeter.empty())
 	{
+		log_w("SM - Removing Oldest Data");
+
 		const auto tpData = m_mapDataSmartMeter.cbegin()->first;
-
-		Serial.println("SM - Removing Oldest Data");
-
 		m_mapDataSmartMeter.erase(tpData);
 
 		if (m_mapDataSystem.contains(tpData))
@@ -149,10 +147,9 @@ void HttpClient::callbackSystem(const std::chrono::system_clock::time_point& tp,
 	// Remove oldest data if memory gets full
 	if (System::getRamHeapSizePercent() > 90.0f && !m_mapDataSystem.empty())
 	{
+		log_w("SYS - Removing Oldest Data");
+
 		const auto tpData = m_mapDataSystem.cbegin()->first;
-
-		Serial.print("SYS - Removing Oldest Data");
-
 		m_mapDataSystem.erase(tpData);
 
 		if (m_mapDataSmartMeter.contains(tpData))
@@ -212,8 +209,7 @@ bool HttpClient::uploadJson(const std::string& url, const ArduinoJson::JsonDocum
 {
 	bool result = false;
 
-	Serial.println("Sending HTTP Request to: ");
-	Serial.println(url.c_str());
+	log_d("Sending HTTP Request to: %s", url.c_str());
 
 	std::string strJson;
 	ArduinoJson::serializeJson(doc, strJson);
@@ -228,14 +224,12 @@ bool HttpClient::uploadJson(const std::string& url, const ArduinoJson::JsonDocum
 
 	if (httpResponseCode > 0)
 	{
-		Serial.print("HTTP Response Code: ");
-		Serial.println(httpResponseCode);
+		log_d("HTTP Response Code: %d", httpResponseCode);
 
 		if (m_client.getSize() > 0)
 		{
 			const String payload = m_client.getString();
-			Serial.print("Payload: ");
-			Serial.println(payload);
+			log_d("Payload: %s", payload.c_str());
 		}
 
 		if (httpResponseCode >= 200 && httpResponseCode < 300)
@@ -243,8 +237,7 @@ bool HttpClient::uploadJson(const std::string& url, const ArduinoJson::JsonDocum
 	}
 	else
 	{
-		Serial.print("Error sending HTTP Request: ");
-		Serial.println(httpResponseCode);
+		log_e("Error sending HTTP Request: %d", httpResponseCode);
 	}
 
 	m_client.end();

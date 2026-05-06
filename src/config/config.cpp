@@ -18,13 +18,19 @@ Config::~Config()
 
 std::string Config::getConfig(const std::string& key, const std::string& valueDefault)
 {
-	return m_pref.getString(key.c_str(), valueDefault.c_str()).c_str();
+	if (m_pref.isKey(key.c_str()))
+		return m_pref.getString(key.c_str()).c_str();
+
+	return valueDefault;
 }
 
 void Config::setConfig(const std::string& key, const std::string& value)
 {
 	if (value == "")
-		removeConfig(key);
+	{
+		if (m_pref.isKey(key.c_str()))
+			removeConfig(key);
+	}
 	else if (getConfig(key.c_str(), "") != value)
 		m_pref.putString(key.c_str(), value.c_str());
 }

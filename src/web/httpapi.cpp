@@ -207,13 +207,7 @@ ArduinoJson::JsonDocument HttpAPI::decodeJsonSettings(const ArduinoJson::JsonDoc
 	docResponse["system"]["status"] = (okSystem) ? "ok" : "invalid";
 	docResponse["push_api"]["status"] = (okPushApi) ? "ok" : "invalid";
 
-	Serial.println("Validation results:");
-	Serial.print(" - Network: ");
-	Serial.println(okNetwork ? "ok" : "invalid");
-	Serial.print(" - System: ");
-	Serial.println(okSystem ? "ok" : "invalid");
-	Serial.print(" - Push API: ");
-	Serial.println(okPushApi ? "ok" : "invalid");
+	log_d("Validation results - Network: %s | System: %s | Push API: %s", (okNetwork) ? "ok" : "invalid", (okSystem) ? "ok" : "invalid", (okPushApi) ? "ok" : "invalid");
 
 	if (okNetwork && okSystem && okPushApi)
 	{
@@ -225,13 +219,6 @@ ArduinoJson::JsonDocument HttpAPI::decodeJsonSettings(const ArduinoJson::JsonDoc
 	}
 	else
 		docResponse["status"] = "invalid";
-
-	Serial.println("Response JSON:");
-	{
-		std::string test;
-		ArduinoJson::serializeJson(docResponse, test);
-		Serial.println(test.c_str());
-	}
 
 	return docResponse;
 }

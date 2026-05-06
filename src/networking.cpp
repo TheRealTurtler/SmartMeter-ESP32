@@ -1,5 +1,5 @@
 #include "networking.hpp"
-
+#include "Arduino.h"
 #include "config/config_network.hpp"
 #include "config/config_system.hpp"
 
@@ -336,12 +336,7 @@ void Networking::syncNtp()
 
 void Networking::onConnect()
 {
-	Serial.print(" --- WiFi connected. IP: ");
-	Serial.print(WiFi.localIP());
-	Serial.print(" Hostname: ");
-	Serial.print(WiFi.getHostname());
-	Serial.print(" MAC: ");
-	Serial.println(WiFi.macAddress());
+	log_i("--- WiFi connected. IP: %s | Hostname: %s | MAC: %s", WiFi.localIP().toString().c_str(), WiFi.getHostname(), WiFi.macAddress().c_str());
 
 	for (const auto& func : m_vecFuncConnect)
 	{
@@ -351,7 +346,7 @@ void Networking::onConnect()
 
 void Networking::onDisconnect()
 {
-	Serial.println(" --- WiFi disconnected.");
+	log_i("--- WiFi disconnected.");
 
 	for (const auto& func : m_vecFuncDisonnect)
 	{
@@ -361,6 +356,8 @@ void Networking::onDisconnect()
 
 void Networking::onApStart()
 {
+	log_i("--- Access Point started.");
+
 	for (const auto& func : m_vecFuncApStart)
 	{
 		func();
@@ -369,6 +366,8 @@ void Networking::onApStart()
 
 void Networking::onApStop()
 {
+	log_i("--- Access Point stopped.");
+
 	for (const auto& func : m_vecFuncApStop)
 	{
 		func();

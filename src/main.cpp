@@ -11,7 +11,6 @@
 #include "networking.hpp"
 #include <chrono>
 
-
 // NOTE: LED_BUILTIN is wrong for ESP32-C3 Super Mini (evaluates to 7 instead of 8)
 constexpr uint8_t PIN_LED_BUILTIN = 8;
 constexpr uint8_t PIN_LED = 6;
@@ -34,15 +33,15 @@ HttpServer server(api, dc, 80);
 
 void setup()
 {
+	Serial.begin(115200);
+	log_i("Starting up...");
+
 	// Heartbeat
 	hb.init();
 	hb.start();
 
 	// Reset Button with external pullup -> Logic level is inverted
 	Reset::init(std::chrono::seconds(3), PIN_BUTTON_RESET, true);
-
-	// TODO Debug output
-	Serial.begin(9600);
 
 	dc.init();
 	sml.init();
@@ -108,30 +107,4 @@ void loop()
 	api.update();		// HTTP API for Server and Client
 	client.update();	// HTTP Client
 	server.update(); 	// HTTP Server
-
-	// FIXME remove
-	// ---
-	static int test = 0;
-
-	if (++test % 1000 == 0)
-	{
-		test = 0;
-
-		Serial.print("MCU Usage 1min: ");
-		Serial.print(sys.getMcuUsage1min());
-		Serial.print(" 5min: ");
-		Serial.print(sys.getMcuUsage5min());
-		Serial.print(" 15min: ");
-		Serial.println(sys.getMcuUsage15min());
-
-		Serial.print("MEM Total: ");
-		Serial.print(System::getRamHeapSizeTotal());
-		Serial.print(" Free: ");
-		Serial.print(System::getRamHeapSizeFree());
-		Serial.print(" -> Used: ");
-		Serial.print(System::getRamHeapSizeUsed());
-		Serial.print(" Percent: ");
-		Serial.println(System::getRamHeapSizePercent());
-	}
-	// ---
 }

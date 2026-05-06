@@ -56,7 +56,7 @@ void Reset::update()
 
 			if (timeDiff > m_delay)
 			{
-				Serial.println("!!!!! RESET TRIGGERED !!!!!");
+				log_w("!!!!! RESET TRIGGERED !!!!!");
 
 				Config::resetConfigAll();
 				m_resetTriggered = true;

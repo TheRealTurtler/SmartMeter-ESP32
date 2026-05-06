@@ -1,4 +1,5 @@
 #include "httpserver.hpp"
+#include <Arduino.h>
 #include "html.hpp"
 #include <sstream>
 #include "networking.hpp"
@@ -29,14 +30,14 @@ void HttpServer::init()
 
 void HttpServer::start()
 {
-	Serial.println("Starting HTTP Server...");
+	log_i("Starting HTTP Server...");
 
 	m_server.begin();
 }
 
 void HttpServer::stop()
 {
-	Serial.println("Stopping HTTP Server...");
+	log_i("Stopping HTTP Server...");
 
 	m_server.stop();
 }
@@ -67,7 +68,7 @@ void HttpServer::addCallbackSettings(const func_cb_settings& func)
 
 void HttpServer::getHome()
 {
-	Serial.println("HTTP GET HOME");
+	log_d("HTTP GET HOME");
 
 	if (Networking::getInstance()->isConfigured())
 		m_server.sendHeader("Location", "/overview");
@@ -79,14 +80,14 @@ void HttpServer::getHome()
 
 void HttpServer::getPing()
 {
-	Serial.println("HTTP GET PING");
+	log_d("HTTP GET PING");
 
 	m_server.send(200, "text/plain", "Pong");
 }
 
 void HttpServer::getOverview()
 {
-	Serial.println("HTTP GET OVERVIEW");
+	log_d("HTTP GET OVERVIEW");
 
 	if (Html::isCompressed)
 		m_server.sendHeader("Content-Encoding", "gzip");
@@ -96,7 +97,7 @@ void HttpServer::getOverview()
 
 void HttpServer::getSettings()
 {
-	Serial.println("HTTP GET SETTINGS");
+	log_d("HTTP GET SETTINGS");
 
 	if (Html::isCompressed)
 		m_server.sendHeader("Content-Encoding", "gzip");
@@ -106,7 +107,7 @@ void HttpServer::getSettings()
 
 void HttpServer::getApiStatus()
 {
-	Serial.println("HTTP API GET STATUS");
+	log_d("HTTP API GET STATUS");
 
 	const ArduinoJson::JsonDocument doc = m_api.buildJsonStatus();
 	sendJsonResponse(200, doc);
@@ -114,7 +115,7 @@ void HttpServer::getApiStatus()
 
 void HttpServer::getApiSmartmeter()
 {
-	Serial.println("HTTP API GET SMARTMETER");
+	log_d("HTTP API GET SMARTMETER");
 
 	std::vector<std::string> vecFilter;
 
@@ -128,7 +129,7 @@ void HttpServer::getApiSmartmeter()
 
 void HttpServer::getApiSystem()
 {
-	Serial.println("HTTP API GET SYSTEM");
+	log_d("HTTP API GET SYSTEM");
 
 	std::vector<std::string> vecFilter;
 
@@ -142,7 +143,7 @@ void HttpServer::getApiSystem()
 
 void HttpServer::getApiSettings()
 {
-	Serial.println("HTTP API GET SYSTEM");
+	log_d("HTTP API GET SETTINGS");
 
 	std::vector<std::string> vecFilter;
 
@@ -155,7 +156,7 @@ void HttpServer::getApiSettings()
 
 void HttpServer::postApiSettings()
 {
-	Serial.println("HTTP API POST SYSTEM");
+	log_d("HTTP API POST SETTINGS");
 
 	ArduinoJson::JsonDocument docReceived;
 	ArduinoJson::deserializeJson(docReceived, m_server.arg("plain"));

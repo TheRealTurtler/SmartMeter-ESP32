@@ -1,9 +1,7 @@
 #include "datacollector.hpp"
+#include <Arduino.h>
 #include <cmath>
 #include <algorithm>
-
-// FIXME remove
-#include <Arduino.h>
 
 
 DataCollector::DataCollector(const std::chrono::milliseconds& avgInterval):
@@ -58,7 +56,7 @@ void DataCollector::callbackAverage()
 
 	if (timeNow >= timeNext)
 	{
-		Serial.println("Taking Averages...");
+		log_i("Taking Averages...");
 
 		if (m_cbSmartmeter)
 			m_cbSmartmeter(timeNext, m_dataSmartMeter);
@@ -114,6 +112,10 @@ void DataCollector::calcDerivedVoltage()
 	mvVoltageL1L2.updateValue(voltageL1L2);
 	mvVoltageL2L3.updateValue(voltageL2L3);
 	mvVoltageL3L1.updateValue(voltageL3L1);
+
+	log_d("Angle L1-L2: %f | L2-L3: %f | L3-L1: %f", mvAngleL1L2.getValueNow(), mvAngleL2L3.getValueNow(), mvAngleL3L1.getValueNow());
+	log_d("Voltage L1-N: %f | L2-N: %f | L3-N: %f", mvVoltageL1N.getValueNow(), mvVoltageL2N.getValueNow(), mvVoltageL3N.getValueNow());
+	log_d("Voltage L1-L2: %f | L2-L3: %f | L3-L1: %f", mvVoltageL1L2.getValueNow(), mvVoltageL2L3.getValueNow(), mvVoltageL3L1.getValueNow());
 }
 
 void DataCollector::calcDerivedPowerFactor()
@@ -134,6 +136,9 @@ void DataCollector::calcDerivedPowerFactor()
 	mvPfL1.updateValue(pfL1);
 	mvPfL2.updateValue(pfL2);
 	mvPfL3.updateValue(pfL3);
+
+	log_d("Angle Current L1: %f | L2: %f | L3: %f", mvAngleCurrentL1.getValueNow(), mvAngleCurrentL2.getValueNow(), mvAngleCurrentL3.getValueNow());
+	log_d("Power Factor L1: %f | L2: %f | L3: %f", mvPfL1.getValueNow(), mvPfL2.getValueNow(), mvPfL3.getValueNow());
 }
 
 void DataCollector::calcDerivedReactivePower()
@@ -162,6 +167,10 @@ void DataCollector::calcDerivedReactivePower()
 	mvReactPowL2.updateValue(reactPowL2);
 	mvReactPowL3.updateValue(reactPowL3);
 	mvReactPowTotal.updateValue(reactPowTotal);
+
+	log_d("Angle Current L1: %f | L2: %f | L3: %f", mvAngleCurrentL1.getValueNow(), mvAngleCurrentL2.getValueNow(), mvAngleCurrentL3.getValueNow());
+	log_d("Active Power L1: %f | L2: %f | L3: %f | Total: %f", mvActPowL1.getValueNow(), mvActPowL2.getValueNow(), mvActPowL3.getValueNow(), mvActPowTotal.getValueNow());
+	log_d("Reactive Power L1: %f | L2: %f | L3: %f | Total: %f", mvReactPowL1.getValueNow(), mvReactPowL2.getValueNow(), mvReactPowL3.getValueNow(), mvReactPowTotal.getValueNow());
 }
 
 void DataCollector::calcDerivedApparentPower()
@@ -187,7 +196,7 @@ void DataCollector::calcDerivedApparentPower()
 	const double appPowL1 = calcApparentPower(mvActPowL1.getValueNow(), mvReactPowL1.getValueNow());
 	const double appPowL2 = calcApparentPower(mvActPowL2.getValueNow(), mvReactPowL2.getValueNow());
 	const double appPowL3 = calcApparentPower(mvActPowL3.getValueNow(), mvReactPowL3.getValueNow());
-	const double appPowTotal = appPowL1 + appPowL2 + appPowL3;
+	const double appPowTotal = (appPowL1 + appPowL2 + appPowL3);
 
 	mvAppPowL1.updateValue(appPowL1);
 	mvAppPowL2.updateValue(appPowL2);
@@ -196,6 +205,9 @@ void DataCollector::calcDerivedApparentPower()
 
 	const double cosphiTotal = calcPowerFactor(mvActPowTotal.getValueNow(), appPowTotal);
 	mvPfTotal.updateValue(cosphiTotal);
+
+	log_d("Apparent Power L1: %f | L2: %f | L3: %f | Total: %f", mvAppPowL1.getValueNow(), mvAppPowL2.getValueNow(), mvAppPowL3.getValueNow(), mvAppPowTotal.getValueNow());
+	log_d("Power Factor Total: %f", mvPfTotal.getValueNow());
 }
 
 double DataCollector::calcVoltageLL(const double& valueLN1, const double& valueLN2, const double& angleUU)
