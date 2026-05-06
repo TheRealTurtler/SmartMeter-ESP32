@@ -125,7 +125,7 @@ src/
 ├── main.cpp                 # Main firmware entry point
 ├── datacollector.cpp        # Meter data collection and storage
 ├── smlreader.cpp            # SML protocol parsing
-├── iec62056.cpp             # Unused
+├── iec62056.cpp             # Unused (IEC62056 protocol for older meters)
 ├── networking.cpp           # WiFi connectivity and WiFiManager
 ├── reset.cpp                # Reset and factory reset handling
 ├── system.cpp               # System health and uptime tracking
@@ -133,7 +133,7 @@ src/
 │   ├── watchdog.cpp         # Watchdog timer
 │   ├── heartbeat.cpp        # Status LED heartbeat
 │   ├── timer.cpp            # General timers
-│   └── datetime.cpp         # Time synchronization
+│   └── datetime.cpp         # Unused (simple DateTime implementation)
 ├── config/                  # Configuration management
 │   ├── config_network.cpp   # Network settings
 │   ├── config_pushapi.cpp   # Push API configuration
