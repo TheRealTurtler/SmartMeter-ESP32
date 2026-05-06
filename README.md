@@ -12,6 +12,8 @@ This project implements a firmware for the **ESP32-C3 Super Mini** microcontroll
 - **Push API**: Automatically uploads meter readings to a remote API endpoint
 - **System Monitoring**: Includes watchdog timer, heartbeat monitoring, and system health checks
 
+<img width="1583" height="1682" alt="grafik" src="https://github.com/user-attachments/assets/e6501357-64cb-4d47-9dd2-917704bcca36" />
+
 ## Getting Started
 
 ### Hardware Requirements
@@ -54,7 +56,7 @@ This project is built with:
 
 1. **Power on the device** - it will start in Access Point mode if not configured
 2. **Connect to WiFi**: Look for SSID `ESP32-SmartMeter`
-3. **Open Web Interface**: Navigate to `http://192.168.4.1` in your browser
+3. **Open Web Interface**: Navigate to `http://192.168.10.1` in your browser
 4. **Enter WiFi Credentials**:
    - Select your WiFi network from the list
    - Enter your WiFi password
