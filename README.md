@@ -71,8 +71,9 @@ To enable automatic data uploads:
 
 1. **Access Settings Page**: Connect to the web interface and go to Settings
 2. **API Configuration**:
-   - **API Endpoint**: Enter the full URL (e.g., `https://api.example.com/push`)
-   - **API Key**: Optional authentication token if required by your API
+   - **Host**: Enter the server host (e.g., `http://api.example.com`)
+   - **Smartmeter Endpoint**: Enter the endpoint for uploading smart-meter data (e.g. `/upload/smartmeter.php`
+   - **System Endpoint**: Enter the endpoint for uploading system data (e.g. `/upload/system.php`
 3. **Save Settings**: Click "Save" to apply
 4. **Data Upload**: The device will now automatically push meter readings at configured intervals
 
