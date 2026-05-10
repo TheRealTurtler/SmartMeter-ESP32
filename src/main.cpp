@@ -22,7 +22,7 @@ Heartbeat hb(std::chrono::seconds(1), PIN_LED, true);
 
 System sys(wd.getTimeout());
 
-DataCollector dc(std::chrono::minutes(1));
+DataCollector dc(std::chrono::minutes(5));
 SMLReader sml(&dc, Serial1, PIN_RX, PIN_TX);
 
 HttpAPI api;
