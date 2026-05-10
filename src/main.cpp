@@ -11,12 +11,11 @@
 #include "networking.hpp"
 #include <chrono>
 
-// NOTE: LED_BUILTIN is wrong for ESP32-C3 Super Mini (evaluates to 7 instead of 8)
-constexpr uint8_t PIN_LED_BUILTIN = 8;
+constexpr uint8_t PIN_LED_BUILTIN = BUILTIN_LED;		// Pin 8
 constexpr uint8_t PIN_LED = 6;
 constexpr uint8_t PIN_RX = 20;
 constexpr uint8_t PIN_TX = 21;
-constexpr uint8_t PIN_BUTTON_RESET = BOOT_PIN;
+constexpr uint8_t PIN_BUTTON_RESET = BOOT_PIN;			// Pin 9
 
 Watchdog wd(std::chrono::seconds(5));
 Heartbeat hb(std::chrono::seconds(1), PIN_LED, true);
