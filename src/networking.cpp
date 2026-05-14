@@ -329,9 +329,17 @@ void Networking::syncNtp()
 	configTime(settings.offsetGmt, settings.offsetDst, settings.ntp_1.c_str(), settings.ntp_2.c_str(), settings.ntp_3.c_str());
 
 	struct tm timeinfo;
+	const bool okTime = getLocalTime(&timeinfo, 500);
 
-	if (getLocalTime(&timeinfo, 500))
+	if (okTime)
+	{
+		log_i("NTP Sync success!");
 		m_timeLastSyncNtp = std::chrono::steady_clock::now();
+	}
+	else
+	{
+		log_w("NTP Sync failed!");
+	}
 }
 
 void Networking::onConnect()
