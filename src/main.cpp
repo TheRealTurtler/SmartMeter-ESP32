@@ -74,9 +74,13 @@ void setup()
 
 void loop()
 {
+	wd.update();		// Watchdog
+	hb.update();		// Heartbeat
+
 	sys.update();
 
 	dc.updateDatapoint(DP_UPTIME, std::chrono::duration_cast<std::chrono::seconds>(sys.getUptime()).count(), false);
+	dc.updateDatapoint(DP_TEMPERATURE, sys.getTemperature());
 
 	dc.updateDatapoint(DP_MCU_USAGE_1MIN, sys.getMcuUsage1min(), false);
 	dc.updateDatapoint(DP_MCU_USAGE_5MIN, sys.getMcuUsage5min(), false);
@@ -89,16 +93,10 @@ void loop()
 	Reset::getInstance()->update();
 
 	Networking* const net = Networking::getInstance();
-
 	net->update();
 
 	if (net->isWifiConnected())
 		dc.updateDatapoint(DP_WIFI_RSSI, WiFi.RSSI());
-
-	dc.updateDatapoint(DP_TEMPERATURE, sys.getTemperature());
-
-	wd.update();		// Watchdog
-	hb.update();		// Heartbeat
 
 	dc.update();		// Data Collector
 	sml.update();		// SML Reader

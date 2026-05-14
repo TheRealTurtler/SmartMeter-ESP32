@@ -2,8 +2,9 @@
 #include <Arduino.h>
 
 
-const bool TEST = true;
+const bool TEST = false;
 const char* const testData = "1b1b1b1b010101017605010203046200620072650000010176010b0a014c4f4700058061aa05010203040b000000000000000000007262016500d456b701633991007605010203046200620072650000070177010b0a014c4f4700058061aa070100620affff7262016500d456b7f106770701006032010101010101044c4f470177070100600100ff010101010b0a014c4f4700058061aa0177070100010800ff65001c110401621e52ff690000000001047c000177070100020800ff0101621e52ff6900000000000169d80177070100100700ff0101621b52005900000000000000bc0177070100240700ff0101621b520059ffffffffffffff7e0177070100380700ff0101621b52005900000000000000ea01770701004c0700ff0101621b52005900000000000000540177070100200700ff0101622352ff6900000000000009120177070100340700ff0101622352ff6900000000000009090177070100480700ff0101622352ff69000000000000091301770701001f0700ff0101622152fe69000000000000001e0177070100330700ff0101622152fe6900000000000000720177070100470700ff0101622152fe6900000000000000250177070100510701ff0101620852ff5900000000000009610177070100510702ff0101620852ff5900000000000004b70177070100510704ff0101620852ff59000000000000075b017707010051070fff0101620852ff590000000000000072017707010051071aff0101620852ff59000000000000009d01770701000e0700ff0101622c52ff6900000000000001f4017707010000020000010101010330360177070100605a02010101010105184a937001010163d36e0076050102030462006200726500000201710163bbb500001b1b1b1b1a013bad";
+
 
 const std::vector<SMLReader::ObisData> SMLReader::m_vecObisData =
 {
@@ -42,6 +43,7 @@ void SMLReader::init()
 {
 	m_timeLastUpdate = std::chrono::steady_clock::now();
 
+	Serial1.setRxBufferSize(2048);
 	Serial1.begin(9600, SERIAL_8N1, m_pinRx, m_pinTx, true);
 }
 
@@ -49,20 +51,20 @@ void SMLReader::update()
 {
 	if (TEST)
 	{
-		static int ctr = 0;
+		static auto timeLast = std::chrono::steady_clock::now();
+		const auto timeNow = std::chrono::steady_clock::now();
+		const auto timeDiff = (timeLast - timeNow);
 
-		if (++ctr % 1000 == 0)
+		if (timeDiff >= std::chrono::seconds(3))
 		{
 			for (int testIdx = 0; testIdx < strlen(testData) - 1; testIdx += 2)
 			{
-				unsigned int u;
-				sscanf(testData + testIdx, "%02x", &u);
-
-				if (!readByte(u))
-					break;
+				unsigned char c;
+				sscanf(testData + testIdx, "%02hhx", &c);
+				readByte(c);
 			}
 
-			ctr = 0;
+			timeLast = timeNow;
 		}
 	}
 	else
@@ -70,16 +72,8 @@ void SMLReader::update()
 		while (Serial1.available())
 		{
 			const int received = Serial1.read();
-
-			if (received >= 0)
-			{
-				const unsigned char c = received & 0xff;
-
-				readByte(c);
-
-				// FIXME remove
-				log_v("Received byte: %02x", c);
-			}
+			const unsigned char c = (received & 0xff);
+			const bool okByte = readByte(c);
 		}
 	}
 }
@@ -93,11 +87,15 @@ bool SMLReader::readByte(unsigned char byte)
 	switch (currentState)
 	{
 	case SML_START:
+	{
+		log_d(">>> Start of a new message! <<<");
 		m_mapValues.clear();
 		m_timeLastUpdate = std::chrono::steady_clock::now();
 		break;
+	}
 
 	case SML_LISTEND:
+	{
 		for (const auto& it : m_vecObisData)
 		{
 			if (!smlOBISCheck(it.obis))
@@ -106,19 +104,19 @@ bool SMLReader::readByte(unsigned char byte)
 			obisHandler(it);
 			break;
 		}
-
 		break;
+	}
 
 	case SML_UNEXPECTED:
 	{
-		log_w("Unexpected byte: %02x", byte);
+		log_d("Unexpected byte: 0x%02hhx", byte);
 		result = false;
+		break;
 	}
-	break;
 
 	case SML_FINAL:
 	{
-		log_i(">>> Successfully received a complete message!");
+		log_i(">>> Successfully received a complete message! <<<");
 
 		if (m_dc)
 		{
@@ -135,6 +133,7 @@ bool SMLReader::readByte(unsigned char byte)
 			m_dc->calcDerivedValues();
 			m_dc->setTimeLastUpdateSmartmeter(m_timeLastUpdate);
 		}
+		break;
 	}
 
 	default:
@@ -147,6 +146,7 @@ bool SMLReader::readByte(unsigned char byte)
 void SMLReader::obisHandler(const ObisData& obisValue)
 {
 	double val = 0.0;
+	bool okVal = true;
 
 	switch (obisValue.unit)
 	{
@@ -170,8 +170,12 @@ void SMLReader::obisHandler(const ObisData& obisValue)
 		break;
 
 	default:
-		return;
+		okVal = false;
+		break;
 	}
 
-	m_mapValues[obisValue.dp] = val;
+	log_d("OBIS: %d.%d.%d -> DP: %d, Value: %f OK: %d", obisValue.obis[2], obisValue.obis[3], obisValue.obis[4], obisValue.dp, val, okVal);
+
+	if (okVal)
+		m_mapValues[obisValue.dp] = val;
 }
