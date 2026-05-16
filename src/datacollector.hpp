@@ -30,8 +30,8 @@ public:
 	void start();
 	void update();
 
-	void updateDatapoint(const DATA_POINT_SMARTMETER dp, const double& value, bool calcAverage = true);
-	void updateDatapoint(const DATA_POINT_SYSTEM dp, const double& value, bool calcAverage = true);
+	void updateDatapoint(const DATA_POINT_SMARTMETER dp, double value, bool calcAverage = true);
+	void updateDatapoint(const DATA_POINT_SYSTEM dp, double value, bool calcAverage = true);
 	void calcDerivedValues();
 
 	const DataSmartMeter& getDataSmartMeter() const { return m_dataSmartMeter; }

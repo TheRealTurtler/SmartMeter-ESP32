@@ -31,12 +31,20 @@ void DataCollector::update()
 	m_timerAverage.update();
 }
 
-void DataCollector::updateDatapoint(const DATA_POINT_SMARTMETER dp, const double& value, bool calcAverage)
+void DataCollector::updateDatapoint(const DATA_POINT_SMARTMETER dp, double value, bool calcAverage)
 {
+	if (dp == DP_ANGLE_VOLTAGE_L1L2
+		|| dp == DP_ANGLE_VOLTAGE_L2L3
+		|| dp == DP_ANGLE_VOLTAGE_L3L1)
+	{
+		if (value > 180.0)
+			value = 360.0 - value;
+	}
+
 	m_dataSmartMeter.mapData[dp].updateValue(value, calcAverage);
 }
 
-void DataCollector::updateDatapoint(const DATA_POINT_SYSTEM dp, const double& value, bool calcAverage)
+void DataCollector::updateDatapoint(const DATA_POINT_SYSTEM dp, double value, bool calcAverage)
 {
 	m_dataSystem.mapData[dp].updateValue(value, calcAverage);
 }
@@ -95,7 +103,7 @@ void DataCollector::calcDerivedVoltage()
 	const MeasuredValue& mvAngleL3L1 = m_dataSmartMeter.mapData[DP_ANGLE_VOLTAGE_L3L1];
 	MeasuredValue& mvAngleL2L3 = m_dataSmartMeter.mapData[DP_ANGLE_VOLTAGE_L2L3];
 
-	mvAngleL2L3.updateValue(std::abs(mvAngleL3L1.getValueNow() - mvAngleL1L2.getValueNow()));
+	mvAngleL2L3.updateValue(360.0 - mvAngleL3L1.getValueNow() - mvAngleL1L2.getValueNow());
 
 	const MeasuredValue& mvVoltageL1N = m_dataSmartMeter.mapData[DP_VOLTAGE_L1N];
 	const MeasuredValue& mvVoltageL2N = m_dataSmartMeter.mapData[DP_VOLTAGE_L2N];
@@ -196,7 +204,7 @@ void DataCollector::calcDerivedApparentPower()
 	const double appPowL1 = calcApparentPower(mvActPowL1.getValueNow(), mvReactPowL1.getValueNow());
 	const double appPowL2 = calcApparentPower(mvActPowL2.getValueNow(), mvReactPowL2.getValueNow());
 	const double appPowL3 = calcApparentPower(mvActPowL3.getValueNow(), mvReactPowL3.getValueNow());
-	const double appPowTotal = (appPowL1 + appPowL2 + appPowL3);
+	const double appPowTotal = calcApparentPower(mvActPowTotal.getValueNow(), mvReactPowTotal.getValueNow());
 
 	mvAppPowL1.updateValue(appPowL1);
 	mvAppPowL2.updateValue(appPowL2);
