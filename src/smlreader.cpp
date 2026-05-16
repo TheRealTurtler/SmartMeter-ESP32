@@ -53,14 +53,15 @@ void SMLReader::update()
 	{
 		static auto timeLast = std::chrono::steady_clock::now();
 		const auto timeNow = std::chrono::steady_clock::now();
-		const auto timeDiff = (timeLast - timeNow);
+		const auto timeDiff = (timeNow - timeLast);
 
-		if (timeDiff >= std::chrono::seconds(3))
+		if (timeDiff >= std::chrono::seconds(2))
 		{
-			for (int testIdx = 0; testIdx < strlen(testData) - 1; testIdx += 2)
+			for (size_t testIdx = 0; testIdx < strlen(testData) - 1; testIdx += 2)
 			{
-				unsigned char c;
-				sscanf(testData + testIdx, "%02hhx", &c);
+				unsigned int received;
+				sscanf(testData + testIdx, "%02hhx", &received);
+				const unsigned char c = (received & 0xff);
 				readByte(c);
 			}
 
@@ -73,7 +74,7 @@ void SMLReader::update()
 		{
 			const int received = Serial1.read();
 			const unsigned char c = (received & 0xff);
-			const bool okByte = readByte(c);
+			readByte(c);
 		}
 	}
 }
