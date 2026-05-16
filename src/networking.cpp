@@ -217,8 +217,6 @@ bool Networking::validateNtpSettings(const SettingsNtp& settings)
 
 void Networking::reload()
 {
-	// FIXME WPS
-
 	if (WiFi.getMode() == WIFI_STA)
 	{
 		WiFi.disconnect();
