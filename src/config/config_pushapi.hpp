@@ -15,6 +15,8 @@ public:
 		SERVER_HOST,
 		SERVER_PATH_SMARTMETER,
 		SERVER_PATH_SYSTEM,
+		BATCH_SIZE,
+		DISABLE_WIFI,
 	};
 
 	std::string getConfig(const CONFIG_KEY key);

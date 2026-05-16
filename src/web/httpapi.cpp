@@ -154,6 +154,8 @@ ArduinoJson::JsonDocument HttpAPI::buildJsonSettings(const std::vector<std::stri
 		obj["server_host"] = settings.serverHost;
 		obj["server_path_smartmeter"] = settings.serverLocationSmartMeter;
 		obj["server_path_system"] = settings.serverLocationSystem;
+		obj["batch_size"] = settings.batchSize;
+		obj["disable_wifi"] = settings.disbaleWifi;
 	}
 
 	return doc;
@@ -198,6 +200,8 @@ ArduinoJson::JsonDocument HttpAPI::decodeJsonSettings(const ArduinoJson::JsonDoc
 	settingsPushApi.serverHost = objPushApi["server_host"].as<std::string>();
 	settingsPushApi.serverLocationSmartMeter = objPushApi["server_path_smartmeter"].as<std::string>();
 	settingsPushApi.serverLocationSystem = objPushApi["server_path_system"].as<std::string>();
+	settingsPushApi.batchSize = objPushApi["batch_size"].as<int>();
+	settingsPushApi.disbaleWifi = objPushApi["disable_wifi"].as<bool>();
 
 	const bool okNetwork = Networking::validateNetworkSettings(settingsNetwork);
 	const bool okSystem = Networking::validateNtpSettings(settingsNtp);

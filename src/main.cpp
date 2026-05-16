@@ -47,12 +47,6 @@ void setup()
 
 	api.init();
 
-	client.init();
-	client.setTimeoutConnect((wd.getTimeout() - std::chrono::seconds(1)) / 2);
-	client.setTimeoutReply((wd.getTimeout() - std::chrono::seconds(1)) / 2);
-
-	server.init();
-
 	Networking* const net = Networking::init();
 	net->addCallbackConnect([]() { hb.pattern(Heartbeat::FAST_1, 3); });
 	net->addCallbackApStart([]() { hb.pattern(Heartbeat::FAST_1, 3); });
@@ -62,6 +56,12 @@ void setup()
 	net->addCallbackApStop([]() { server.stop(); });
 	net->addCallbackConnect([]() { client.setEnableUpload(true); });
 	net->addCallbackDisconnect([]() { client.setEnableUpload(false); });
+
+	client.init();
+	client.setTimeoutConnect((wd.getTimeout() - std::chrono::seconds(1)) / 2);
+	client.setTimeoutReply((wd.getTimeout() - std::chrono::seconds(1)) / 2);
+
+	server.init();
 
 	server.addCallbackSettings([net]() { net->reload(); });
 	server.addCallbackSettings([]() { client.reload(); });

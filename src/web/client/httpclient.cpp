@@ -2,6 +2,7 @@
 #include "Arduino.h"
 #include "system.hpp"
 #include "config/config_pushapi.hpp"
+#include "networking.hpp"
 
 
 HttpClient::HttpClient(const HttpAPI& api, DataCollector& dc):
@@ -24,6 +25,8 @@ void HttpClient::reload()
 {
 	const Settings settings = loadSettings();
 
+	bool enableWifi = (m_settings.enable && m_settings.disbaleWifi);
+
 	if (validateSettings(settings))
 	{
 		m_settings = settings;
@@ -34,12 +37,23 @@ void HttpClient::reload()
 		m_settings.serverHost = "";
 		m_settings.serverLocationSmartMeter = "/";
 		m_settings.serverLocationSystem = "/";
+		m_settings.batchSize = 1;
+		m_settings.disbaleWifi = false;
 	}
 
 	if (!m_settings.enable)
 	{
 		m_mapDataSmartMeter.clear();
 		m_mapDataSystem.clear();
+
+		// If WiFi was disabled before, it has to be enabled now
+		if (enableWifi)
+			Networking::getInstance()->setEnabled(true);
+	}
+	else
+	{
+		if (m_settings.disbaleWifi)
+			Networking::getInstance()->setEnabled(false);
 	}
 }
 
@@ -51,7 +65,10 @@ void HttpClient::update()
 	if (timeDiff < m_delayNext)
 		return;
 
-	if (!m_settings.enable || m_settings.serverHost == "" || !m_enableUpload)
+	if (!m_settings.enable
+		|| m_settings.serverHost == ""
+		|| !m_enableUpload
+		|| m_batchCounter < m_settings.batchSize)
 	{
 		m_delayNext = m_delayRetry;
 		m_timeLast = timeNow;
@@ -74,6 +91,12 @@ void HttpClient::update()
 		return;
 	}
 
+	// Only reset batch count when all data is transmitted
+	m_batchCounter = 0;
+
+	if (m_settings.disbaleWifi)
+		Networking::getInstance()->setEnabled(false);
+
 	m_timeLast = std::chrono::steady_clock::now();
 }
 
@@ -87,6 +110,12 @@ HttpClient::Settings HttpClient::loadSettings()
 	settings.serverLocationSmartMeter = cfg.getConfig(Config_PushAPI::SERVER_PATH_SMARTMETER);
 	settings.serverLocationSystem = cfg.getConfig(Config_PushAPI::SERVER_PATH_SYSTEM);
 
+	errno = 0;
+	settings.batchSize = std::strtol(cfg.getConfig(Config_PushAPI::BATCH_SIZE).c_str(), nullptr, 10);
+	settings.batchSize = (errno == 0 ? settings.batchSize : 0);
+
+	settings.disbaleWifi = (cfg.getConfig(Config_PushAPI::DISABLE_WIFI) == "true");
+
 	return settings;
 }
 
@@ -98,6 +127,8 @@ void HttpClient::saveSettings(const Settings& settings)
 	cfg.setConfig(Config_PushAPI::SERVER_HOST, settings.serverHost);
 	cfg.setConfig(Config_PushAPI::SERVER_PATH_SMARTMETER, settings.serverLocationSmartMeter);
 	cfg.setConfig(Config_PushAPI::SERVER_PATH_SYSTEM, settings.serverLocationSystem);
+	cfg.setConfig(Config_PushAPI::BATCH_SIZE, std::to_string(settings.batchSize));
+	cfg.setConfig(Config_PushAPI::DISABLE_WIFI, (settings.disbaleWifi ? "true" : "false"));
 }
 
 bool HttpClient::validateSettings(const Settings& settings)
@@ -113,6 +144,9 @@ bool HttpClient::validateSettings(const Settings& settings)
 			result = false;
 
 		if (settings.serverLocationSystem.empty())
+			result = false;
+
+		if (settings.batchSize <= 0)
 			result = false;
 	}
 
@@ -137,6 +171,10 @@ void HttpClient::callbackSmartmeter(const std::chrono::system_clock::time_point&
 	}
 
 	m_mapDataSmartMeter[tp] = data;
+	++m_batchCounter;
+
+	if (m_batchCounter >= m_settings.batchSize && m_settings.disbaleWifi)
+		Networking::getInstance()->setEnabled(true);
 }
 
 void HttpClient::callbackSystem(const std::chrono::system_clock::time_point& tp, const DataSystem& data)

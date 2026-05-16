@@ -253,6 +253,9 @@ void Networking::reload()
 
 		// Force NTP sync on next connect
 		m_timeLastSyncNtp = std::chrono::steady_clock::time_point();
+
+		// Reset first connect
+		m_timeFirstConnect = std::chrono::steady_clock::time_point();
 	}
 	else
 	{
@@ -291,10 +294,14 @@ void Networking::updateWifiStation()
 
 	if (wifiState == WL_CONNECTED)
 	{
+		if (m_timeFirstConnect == std::chrono::steady_clock::time_point())
+			m_timeFirstConnect = std::chrono::steady_clock::now();
+
 		if (wifiState != m_wifiStateLast)
 			onConnect();
 
-		checkNtp();
+		if (!checkNtp())
+			syncNtp();
 	}
 	else
 	{
@@ -305,6 +312,30 @@ void Networking::updateWifiStation()
 	}
 
 	m_wifiStateLast = wifiState;
+
+	if (WiFi.getMode() == WIFI_OFF && m_enabled)
+	{
+		log_i("=== Enabling WiFi...");
+		WiFi.begin();
+	}
+	else if (WiFi.getMode() != WIFI_OFF && !m_enabled)
+	{
+		const auto timeNow = std::chrono::steady_clock::now();
+
+		// Wait at least 5min after startup and first connect to disable WiFi again
+		// -> This way settings can always be changed after a restart without completely resetting
+		if (m_timeFirstConnect != std::chrono::steady_clock::time_point() && timeNow - m_timeFirstConnect >= std::chrono::minutes(5))
+		{
+			// Wait for NTP sync before turning off
+			if (checkNtp())
+			{
+				log_i("=== Disabling WiFi...");
+
+				WiFi.disconnect(true);
+				WiFi.mode(WIFI_OFF);
+			}
+		}
+	}
 }
 
 void Networking::updateWifiAp()
@@ -312,12 +343,16 @@ void Networking::updateWifiAp()
 
 }
 
-void Networking::checkNtp()
+bool Networking::checkNtp()
 {
+	bool result = true;
+
 	const std::chrono::steady_clock::time_point timeNow = std::chrono::steady_clock::now();
 
 	if (timeNow - m_timeLastSyncNtp > m_intervalSyncNtp || m_timeLastSyncNtp == std::chrono::steady_clock::time_point())
-		syncNtp();
+		result = false;
+
+	return result;
 }
 
 void Networking::syncNtp()

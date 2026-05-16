@@ -205,6 +205,21 @@
 
 					<label>System Endpoint</label>
 					<input id="push_path_system" placeholder="z.B. /upload/system">
+
+					<label>Datensätze pro Übertragung</label>
+					<input type="number" id="push_batch_size" min="1" placeholder="z.B. 6 für Übertragung alle 30min">
+
+					<div class="title-row" style="margin-top:10px;">
+						<label style="margin:0;">
+							WLAN zwischen Übertragungen deaktivieren
+						</label>
+
+						<label class="switch">
+							<input type="checkbox" id="push_disable_wifi">
+							<span class="slider"></span>
+						</label>
+					</div>
+
 				</div>
 			</div>
 
@@ -352,10 +367,12 @@
 				const d = await r.json();
 
 				// PUSH API
-				document.getElementById('push_enabled').checked = d.push_api.enable;
+				document.getElementById('push_enabled').checked = d.push_api.enable ?? false;
 				document.getElementById('push_host').value = d.push_api.server_host || "";
 				document.getElementById('push_path_smartmeter').value = d.push_api.server_path_smartmeter || "";
 				document.getElementById('push_path_system').value = d.push_api.server_path_system || "";
+				document.getElementById('push_batch_size').value = d.push_api.batch_size ?? 1;
+				document.getElementById('push_disable_wifi').checked = d.push_api.disable_wifi ?? false;
 
 				// NETWORK
 				document.getElementById('wifi_ssid').value = d.network.ssid || "";
@@ -416,7 +433,9 @@
 					enable: document.getElementById('push_enabled').checked,
 					server_host: document.getElementById('push_host').value,
 					server_path_smartmeter: document.getElementById('push_path_smartmeter').value,
-					server_path_system: document.getElementById('push_path_system').value
+					server_path_system: document.getElementById('push_path_system').value,
+					batch_size: parseInt(document.getElementById('push_batch_size').value, 10),
+					disable_wifi: document.getElementById('push_disable_wifi').checked
 				}
 			};
 
@@ -429,7 +448,8 @@
 
 				hideOverlay();
 
-				if (!r.ok) throw new Error(await r.text());
+				if (!r.ok)
+					throw new Error(await r.text());
 
 				alert("Gespeichert ✅");
 
@@ -441,7 +461,8 @@
 
 		// RESET
 		async function factoryReset() {
-			if (!confirm("Werkseinstellungen wirklich laden?")) return;
+			if (!confirm("Werkseinstellungen wirklich laden?"))
+				return;
 
 			showOverlay("Reset...");
 
@@ -459,6 +480,7 @@
 		}
 
 		document.addEventListener('DOMContentLoaded', load);
+
 	</script>
 
 </body>

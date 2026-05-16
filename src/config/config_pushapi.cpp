@@ -7,6 +7,8 @@ const std::unordered_map<Config_PushAPI::CONFIG_KEY, Config_PushAPI::ConfigData>
 	{ SERVER_HOST,					{"host",			""} },
 	{ SERVER_PATH_SMARTMETER,		{"path_meter",		""} },
 	{ SERVER_PATH_SYSTEM,			{"path_system",		""} },
+	{ BATCH_SIZE,					{"batch_size",		"1"} },
+	{ DISABLE_WIFI,					{"disable_wifi",	"false"} },
 };
 
 

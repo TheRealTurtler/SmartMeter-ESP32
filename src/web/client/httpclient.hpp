@@ -15,9 +15,11 @@ public:
 	struct Settings
 	{
 		bool enable = false;
-		std::string serverHost;
-		std::string serverLocationSmartMeter;
-		std::string serverLocationSystem;
+		std::string serverHost = "";
+		std::string serverLocationSmartMeter = "/";
+		std::string serverLocationSystem = "/";
+		uint16_t batchSize = 1;
+		bool disbaleWifi = false;
 	};
 
 	void init();
@@ -44,6 +46,7 @@ private:
 	Settings m_settings;
 
 	bool m_enableUpload = false;
+	uint16_t m_batchCounter = 0;
 
 	std::chrono::steady_clock::time_point m_timeLast;
 	std::chrono::milliseconds m_delayNext = std::chrono::seconds(1);
