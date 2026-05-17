@@ -313,12 +313,12 @@ void Networking::updateWifiStation()
 
 	m_wifiStateLast = wifiState;
 
-	if (WiFi.getMode() == WIFI_OFF && m_enabled)
+	if (WiFi.getMode() == WIFI_OFF && m_enableWifi)
 	{
 		log_i("=== Enabling WiFi...");
 		WiFi.begin();
 	}
-	else if (WiFi.getMode() != WIFI_OFF && !m_enabled)
+	else if (WiFi.getMode() != WIFI_OFF && !m_enableWifi)
 	{
 		const auto timeNow = std::chrono::steady_clock::now();
 

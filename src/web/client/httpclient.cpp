@@ -29,14 +29,15 @@ void HttpClient::reload()
 
 	if (validateSettings(settings))
 	{
+
 		m_settings = settings;
 	}
 	else
 	{
 		m_settings.enable = false;
 		m_settings.serverHost = "";
-		m_settings.serverLocationSmartMeter = "/";
-		m_settings.serverLocationSystem = "/";
+		m_settings.serverLocationSmartMeter = "";
+		m_settings.serverLocationSystem = "";
 		m_settings.batchSize = 1;
 		m_settings.disbaleWifi = false;
 	}
@@ -44,7 +45,7 @@ void HttpClient::reload()
 	if (m_settings.enable)
 	{
 		if (m_settings.disbaleWifi)
-			Networking::getInstance()->setEnabled(false);
+			Networking::getInstance()->setEnableWifi(false);
 	}
 	else
 	{
@@ -53,7 +54,7 @@ void HttpClient::reload()
 
 		// If WiFi was disabled before, it has to be enabled now
 		if (enableWifi)
-			Networking::getInstance()->setEnabled(true);
+			Networking::getInstance()->setEnableWifi(true);
 	}
 
 	if (m_settings.enable && m_settings.serverHost.starts_with("https://"))
@@ -81,6 +82,16 @@ void HttpClient::update()
 
 	if (timeDiff < m_delayNext)
 		return;
+
+	m_batchCounter = std::max({ m_mapDataSmartMeter.size(), m_mapDataSystem.size() });
+
+	Networking* const net = Networking::getInstance();
+
+	if (m_settings.disbaleWifi)
+	{
+		if (!net->getEnableWifi())
+			net->setEnableWifi(true);
+	}
 
 	if (!m_settings.enable
 		|| m_settings.serverHost == ""
@@ -115,7 +126,10 @@ void HttpClient::update()
 	m_batchCounter = 0;
 
 	if (m_settings.disbaleWifi)
-		Networking::getInstance()->setEnabled(false);
+	{
+		if (net->getEnableWifi())
+			net->setEnableWifi(false);
+	}
 
 	m_timeLast = std::chrono::steady_clock::now();
 }
@@ -194,10 +208,6 @@ void HttpClient::callbackSmartmeter(const std::chrono::system_clock::time_point&
 	}
 
 	m_mapDataSmartMeter[tp] = data;
-	++m_batchCounter;
-
-	if (m_batchCounter >= m_settings.batchSize && m_settings.disbaleWifi)
-		Networking::getInstance()->setEnabled(true);
 }
 
 void HttpClient::callbackSystem(const std::chrono::system_clock::time_point& tp, const DataSystem& data)

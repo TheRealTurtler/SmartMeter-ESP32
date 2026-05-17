@@ -17,8 +17,8 @@ public:
 	{
 		bool enable = false;
 		std::string serverHost = "";
-		std::string serverLocationSmartMeter = "/";
-		std::string serverLocationSystem = "/";
+		std::string serverLocationSmartMeter = "";
+		std::string serverLocationSystem = "";
 		uint16_t batchSize = 1;
 		bool disbaleWifi = false;
 	};

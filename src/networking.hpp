@@ -42,7 +42,8 @@ public:
 	bool isConfigured() { return m_configured; }
 	bool isWifiConnected() { return m_wifiStateLast; }
 
-	void setEnabled(bool enable) { m_enabled = enable; }
+	bool getEnableWifi() const { return m_enableWifi; }
+	void setEnableWifi(bool enable) { m_enableWifi = enable; }
 
 	typedef std::function<void(void)> func_cb_connect;
 	typedef std::function<void(void)> func_cb_disconnect;
@@ -84,7 +85,7 @@ private:
 
 	bool m_configured = false;
 	bool m_started = false;
-	bool m_enabled = true;
+	bool m_enableWifi = true;
 
 	std::chrono::steady_clock::time_point m_timeFirstConnect;
 	std::chrono::steady_clock::time_point m_timeLastSyncNtp;
