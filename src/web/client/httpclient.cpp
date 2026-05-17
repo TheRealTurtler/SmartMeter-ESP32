@@ -1,5 +1,5 @@
 #include "httpclient.hpp"
-#include "Arduino.h"
+#include <Arduino.h>
 #include "system.hpp"
 #include "config/config_pushapi.hpp"
 #include "networking.hpp"
@@ -41,7 +41,12 @@ void HttpClient::reload()
 		m_settings.disbaleWifi = false;
 	}
 
-	if (!m_settings.enable)
+	if (m_settings.enable)
+	{
+		if (m_settings.disbaleWifi)
+			Networking::getInstance()->setEnabled(false);
+	}
+	else
 	{
 		m_mapDataSmartMeter.clear();
 		m_mapDataSystem.clear();
@@ -50,10 +55,22 @@ void HttpClient::reload()
 		if (enableWifi)
 			Networking::getInstance()->setEnabled(true);
 	}
+
+	if (m_settings.enable && m_settings.serverHost.starts_with("https://"))
+	{
+		if (!m_clientSecure)
+		{
+			m_clientSecure = new WiFiClientSecure();
+			m_clientSecure->setInsecure();
+		}
+	}
 	else
 	{
-		if (m_settings.disbaleWifi)
-			Networking::getInstance()->setEnabled(false);
+		if (m_clientSecure)
+		{
+			delete m_clientSecure;
+			m_clientSecure = nullptr;
+		}
 	}
 }
 
@@ -90,6 +107,9 @@ void HttpClient::update()
 		m_timeLast = std::chrono::steady_clock::now();
 		return;
 	}
+
+	if (m_clientSecure && m_clientSecure->connected())
+		m_clientSecure->stop();
 
 	// Only reset batch count when all data is transmitted
 	m_batchCounter = 0;
@@ -252,7 +272,11 @@ bool HttpClient::uploadJson(const std::string& url, const ArduinoJson::JsonDocum
 	std::string strJson;
 	ArduinoJson::serializeJson(doc, strJson);
 
-	m_client.begin(url.c_str());
+	if (m_clientSecure)
+		m_client.begin(*m_clientSecure, url.c_str());
+	else
+		m_client.begin(url.c_str());
+
 	m_client.addHeader("Content-Type", "application/json");
 
 	m_client.setConnectTimeout(m_timeoutConnect.count());

@@ -3,6 +3,7 @@
 #include "web/httpapi.hpp"
 #include "datacollector.hpp"
 #include <HTTPClient.h>
+#include <WiFiClientSecure.h>
 #include <string>
 #include <chrono>
 
@@ -42,6 +43,7 @@ private:
 	const HttpAPI& m_api;
 
 	HTTPClient m_client;
+	WiFiClientSecure* m_clientSecure = nullptr;
 
 	Settings m_settings;
 
