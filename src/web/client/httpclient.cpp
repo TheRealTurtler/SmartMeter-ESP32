@@ -157,16 +157,19 @@ bool HttpClient::validateSettings(const Settings& settings)
 
 	if (settings.enable)
 	{
-		if (settings.serverHost.empty())
+		if (settings.serverHost == "")
 			result = false;
 
-		if (settings.serverLocationSmartMeter.empty())
+		else if (settings.serverLocationSmartMeter == "" && settings.serverLocationSystem == "")
 			result = false;
 
-		if (settings.serverLocationSystem.empty())
+		else if (settings.serverLocationSmartMeter != "" && !settings.serverLocationSmartMeter.starts_with("/"))
 			result = false;
 
-		if (settings.batchSize <= 0)
+		else if (settings.serverLocationSystem != "" && !settings.serverLocationSystem.starts_with("/"))
+			result = false;
+
+		else if (settings.batchSize <= 0)
 			result = false;
 	}
 
@@ -175,7 +178,7 @@ bool HttpClient::validateSettings(const Settings& settings)
 
 void HttpClient::callbackSmartmeter(const std::chrono::system_clock::time_point& tp, const DataSmartMeter& data)
 {
-	if (!m_settings.enable)
+	if (!m_settings.enable || m_settings.serverLocationSmartMeter == "")
 		return;
 
 	// Remove oldest data if memory gets full
@@ -199,7 +202,7 @@ void HttpClient::callbackSmartmeter(const std::chrono::system_clock::time_point&
 
 void HttpClient::callbackSystem(const std::chrono::system_clock::time_point& tp, const DataSystem& data)
 {
-	if (!m_settings.enable)
+	if (!m_settings.enable || m_settings.serverLocationSystem == "")
 		return;
 
 	// Remove oldest data if memory gets full
@@ -220,6 +223,9 @@ void HttpClient::callbackSystem(const std::chrono::system_clock::time_point& tp,
 int8_t HttpClient::uploadSmartMeter()
 {
 	int8_t result = 0;
+
+	if (m_settings.serverLocationSmartMeter == "")
+		m_mapDataSmartMeter.clear();
 
 	if (!m_mapDataSmartMeter.empty())
 	{
@@ -243,6 +249,9 @@ int8_t HttpClient::uploadSmartMeter()
 int8_t HttpClient::uploadSystem()
 {
 	int8_t result = 0;
+
+	if (m_settings.serverLocationSystem == "")
+		m_mapDataSystem.clear();
 
 	if (!m_mapDataSystem.empty())
 	{
