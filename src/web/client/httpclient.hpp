@@ -30,6 +30,7 @@ public:
 	void setEnableUpload(bool enable) { m_enableUpload = enable; }
 
 	void setTimeoutConnect(const std::chrono::milliseconds& timeout) { m_timeoutConnect = timeout; }
+	void setTimeoutHandshake(const std::chrono::milliseconds& timeout) { m_timeoutHandshake = timeout; }
 	void setTimeoutReply(const std::chrono::milliseconds& timeout) { m_timeoutReply = timeout; }
 
 	void setDelayRequest(const std::chrono::milliseconds& delay) { m_delayRequest = delay; }
@@ -56,7 +57,8 @@ private:
 	std::chrono::milliseconds m_delayRequest = std::chrono::milliseconds(500);
 	std::chrono::milliseconds m_delayRetry = std::chrono::seconds(5);
 
-	std::chrono::milliseconds m_timeoutConnect = std::chrono::seconds(1);;
+	std::chrono::milliseconds m_timeoutConnect = std::chrono::seconds(1);
+	std::chrono::milliseconds m_timeoutHandshake = std::chrono::seconds(1);
 	std::chrono::milliseconds m_timeoutReply = std::chrono::seconds(1);
 
 	std::map<std::chrono::system_clock::time_point, DataSmartMeter> m_mapDataSmartMeter;

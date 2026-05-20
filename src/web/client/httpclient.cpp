@@ -5,6 +5,10 @@
 #include "networking.hpp"
 
 
+// MAy RAM usage before oldest datasets are deleted
+const float MAX_RAM_USAGE = 80.0f;		// default: 80.0f [%]
+
+
 HttpClient::HttpClient(const HttpAPI& api, DataCollector& dc):
 	m_api(api)
 {
@@ -57,21 +61,13 @@ void HttpClient::reload()
 			Networking::getInstance()->setEnableWifi(true);
 	}
 
-	if (m_settings.enable && m_settings.serverHost.starts_with("https://"))
+	if (m_clientSecure)
 	{
-		if (!m_clientSecure)
-		{
-			m_clientSecure = new WiFiClientSecure();
-			m_clientSecure->setInsecure();
-		}
-	}
-	else
-	{
-		if (m_clientSecure)
-		{
-			delete m_clientSecure;
-			m_clientSecure = nullptr;
-		}
+		if (m_clientSecure->connected())
+			m_clientSecure->stop();
+
+		delete m_clientSecure;
+		m_clientSecure = nullptr;
 	}
 }
 
@@ -119,8 +115,15 @@ void HttpClient::update()
 		return;
 	}
 
-	if (m_clientSecure && m_clientSecure->connected())
-		m_clientSecure->stop();
+	// Disconnect after all data has been transmitted
+	if (m_clientSecure)
+	{
+		if (m_clientSecure->connected())
+			m_clientSecure->stop();
+
+		delete m_clientSecure;
+		m_clientSecure = nullptr;
+	}
 
 	// Only reset batch count when all data is transmitted
 	m_batchCounter = 0;
@@ -196,7 +199,7 @@ void HttpClient::callbackSmartmeter(const std::chrono::system_clock::time_point&
 		return;
 
 	// Remove oldest data if memory gets full
-	if (System::getRamHeapSizePercent() > 90.0f && !m_mapDataSmartMeter.empty())
+	while (System::getRamHeapSizePercent() > MAX_RAM_USAGE && !m_mapDataSmartMeter.empty())
 	{
 		log_w("SM - Removing Oldest Data");
 
@@ -216,7 +219,7 @@ void HttpClient::callbackSystem(const std::chrono::system_clock::time_point& tp,
 		return;
 
 	// Remove oldest data if memory gets full
-	if (System::getRamHeapSizePercent() > 90.0f && !m_mapDataSystem.empty())
+	while (System::getRamHeapSizePercent() > MAX_RAM_USAGE && !m_mapDataSystem.empty())
 	{
 		log_w("SYS - Removing Oldest Data");
 
@@ -291,15 +294,30 @@ bool HttpClient::uploadJson(const std::string& url, const ArduinoJson::JsonDocum
 	std::string strJson;
 	ArduinoJson::serializeJson(doc, strJson);
 
-	if (m_clientSecure)
+	// Reuse connection whenever possible, but disconnect after all data has been transmitted
+	const bool reuseConnection = (m_mapDataSmartMeter.size() + m_mapDataSystem.size() > 1);
+	m_client.setReuse(reuseConnection);
+
+	m_client.setConnectTimeout(m_timeoutConnect.count());
+	m_client.setTimeout(m_timeoutReply.count());
+
+	if (m_settings.serverHost.starts_with("https://"))
+	{
+		if (!m_clientSecure)
+			m_clientSecure = new WiFiClientSecure();
+
+		// Ignore self signed certificates
+		m_clientSecure->setInsecure();
+
+		// Handshake Timeout is set in seconds instead of milliseconds!
+		m_clientSecure->setHandshakeTimeout(m_timeoutHandshake.count() / 1000);
+
 		m_client.begin(*m_clientSecure, url.c_str());
+	}
 	else
 		m_client.begin(url.c_str());
 
 	m_client.addHeader("Content-Type", "application/json");
-
-	m_client.setConnectTimeout(m_timeoutConnect.count());
-	m_client.setTimeout(m_timeoutReply.count());
 
 	const int httpResponseCode = m_client.POST(strJson.c_str());
 

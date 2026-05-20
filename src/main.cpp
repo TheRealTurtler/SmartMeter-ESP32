@@ -1,4 +1,5 @@
 #include <Arduino.h>
+#include <chrono>
 #include "time.h"
 #include "components/heartbeat.hpp"
 #include "components/watchdog.hpp"
@@ -9,7 +10,6 @@
 #include "system.hpp"
 #include "reset.hpp"
 #include "networking.hpp"
-#include <chrono>
 
 constexpr uint8_t PIN_LED_BUILTIN = BUILTIN_LED;		// Pin 8
 constexpr uint8_t PIN_LED = 6;
@@ -17,7 +17,7 @@ constexpr uint8_t PIN_RX = 20;
 constexpr uint8_t PIN_TX = 21;
 constexpr uint8_t PIN_BUTTON_RESET = BOOT_PIN;			// Pin 9
 
-Watchdog wd(std::chrono::seconds(5));
+Watchdog wd(std::chrono::seconds(60));
 Heartbeat hb(std::chrono::seconds(1), PIN_LED, true);
 
 System sys(wd.getTimeout());
@@ -30,10 +30,79 @@ HttpClient client(api, dc);
 HttpServer server(api, dc, 80);
 
 
+void printResetReason(const esp_reset_reason_t reason)
+{
+	std::string strReason = "";
+
+	switch (reason)
+	{
+	case ESP_RST_UNKNOWN:
+		strReason = "Unknown";
+		break;
+	case ESP_RST_POWERON:
+		strReason = "Power ON";
+		break;
+	case ESP_RST_EXT:
+		strReason = "External";
+		break;
+	case ESP_RST_SW:
+		strReason = "Software Restart";
+		break;
+	case ESP_RST_PANIC:
+		strReason = "Panic";
+		break;
+	case ESP_RST_INT_WDT:
+		strReason = "Interrupt Watchdog";
+		break;
+	case ESP_RST_TASK_WDT:
+		strReason = "Task Watchdog";
+		break;
+	case ESP_RST_WDT:
+		strReason = "Other Watchdog";
+		break;
+	case ESP_RST_DEEPSLEEP:
+		strReason = "Deep Sleep";
+		break;
+	case ESP_RST_BROWNOUT:
+		strReason = "Brownout";
+		break;
+	case ESP_RST_SDIO:
+		strReason = "SDIO";
+		break;
+	case ESP_RST_USB:
+		strReason = "USB";
+		break;
+	case ESP_RST_JTAG:
+		strReason = "JTAG";
+		break;
+	case ESP_RST_EFUSE:
+		strReason = "E-Fuse";
+		break;
+	case ESP_RST_PWR_GLITCH:
+		strReason = "Power Glitch";
+		break;
+	case ESP_RST_CPU_LOCKUP:
+		strReason = "CPU Lockup";
+		break;
+
+	default:
+		strReason = "Invalid";
+		break;
+	}
+
+	log_i("Reset Reason: %d - %s", reason, strReason.c_str());
+}
+
 void setup()
 {
 	Serial.begin(115200);
-	log_i("Starting up...");
+	delay(1000);
+	log_d("==================== Setup Start ====================");
+
+	printResetReason(esp_reset_reason());
+
+	// Watchdog
+	wd.init();
 
 	// Heartbeat
 	hb.init();
@@ -58,18 +127,17 @@ void setup()
 	net->addCallbackDisconnect([]() { client.setEnableUpload(false); });
 
 	client.init();
-	client.setTimeoutConnect((wd.getTimeout() - std::chrono::seconds(1)) / 2);
-	client.setTimeoutReply((wd.getTimeout() - std::chrono::seconds(1)) / 2);
+	client.setTimeoutConnect(std::chrono::seconds(2));
+	client.setTimeoutHandshake(std::chrono::seconds(2));
+	client.setTimeoutReply(std::chrono::seconds(2));
 
 	server.init();
-
 	server.addCallbackSettings([net]() { net->reload(); });
 	server.addCallbackSettings([]() { client.reload(); });
 
-	// Watchdog
-	wd.init();
-
 	dc.start();
+
+	log_d("==================== Setup End ====================");
 }
 
 void loop()
