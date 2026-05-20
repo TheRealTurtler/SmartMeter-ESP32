@@ -17,7 +17,7 @@ constexpr uint8_t PIN_RX = 20;
 constexpr uint8_t PIN_TX = 21;
 constexpr uint8_t PIN_BUTTON_RESET = BOOT_PIN;			// Pin 9
 
-Watchdog wd(std::chrono::seconds(60));
+Watchdog wd(std::chrono::seconds(10));
 Heartbeat hb(std::chrono::seconds(1), PIN_LED, true);
 
 System sys(wd.getTimeout());
