@@ -43,7 +43,7 @@ void SMLReader::init()
 {
 	m_timeLastUpdate = std::chrono::steady_clock::now();
 
-	m_serial.setRxBufferSize(2048);
+	m_serial.setRxBufferSize(8192);
 	m_serial.begin(9600, SERIAL_8N1, m_pinRx, m_pinTx, true);
 }
 
