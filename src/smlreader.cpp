@@ -43,8 +43,8 @@ void SMLReader::init()
 {
 	m_timeLastUpdate = std::chrono::steady_clock::now();
 
-	Serial1.setRxBufferSize(2048);
-	Serial1.begin(9600, SERIAL_8N1, m_pinRx, m_pinTx, true);
+	m_serial.setRxBufferSize(2048);
+	m_serial.begin(9600, SERIAL_8N1, m_pinRx, m_pinTx, true);
 }
 
 void SMLReader::update()
@@ -70,9 +70,9 @@ void SMLReader::update()
 	}
 	else
 	{
-		while (Serial1.available())
+		while (m_serial.available())
 		{
-			const int received = Serial1.read();
+			const int received = m_serial.read();
 			const unsigned char c = (received & 0xff);
 			readByte(c);
 		}
