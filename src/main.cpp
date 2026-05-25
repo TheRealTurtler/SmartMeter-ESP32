@@ -127,9 +127,10 @@ void setup()
 	net->addCallbackDisconnect([]() { client.setEnableUpload(false); });
 
 	client.init();
-	client.setTimeoutConnect(std::chrono::seconds(2));
-	client.setTimeoutHandshake(std::chrono::seconds(2));
-	client.setTimeoutReply(std::chrono::seconds(2));
+	const auto timeoutClient = ((wd.getTimeout() - std::chrono::seconds(1)) / 3);
+	client.setTimeoutConnect(timeoutClient);
+	client.setTimeoutHandshake(timeoutClient);
+	client.setTimeoutReply(timeoutClient);
 
 	server.init();
 	server.addCallbackSettings([net]() { net->reload(); });
