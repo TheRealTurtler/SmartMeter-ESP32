@@ -40,7 +40,7 @@ public:
 	void update();
 
 	bool isConfigured() { return m_configured; }
-	bool isWifiConnected() { return m_wifiStateLast; }
+	bool isWifiConnected() { return (m_wifiStateLast == WL_CONNECTED); }
 
 	bool getEnableWifi() const { return m_enableWifi; }
 	void setEnableWifi(bool enable) { m_enableWifi = enable; }

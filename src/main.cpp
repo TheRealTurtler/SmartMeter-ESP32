@@ -123,8 +123,6 @@ void setup()
 	net->addCallbackApStart([]() { server.start(); });
 	net->addCallbackDisconnect([]() { server.stop(); });
 	net->addCallbackApStop([]() { server.stop(); });
-	net->addCallbackConnect([]() { client.setEnableUpload(true); });
-	net->addCallbackDisconnect([]() { client.setEnableUpload(false); });
 
 	const auto timeoutClient = ((wd.getTimeout() - std::chrono::seconds(1)) / 3);
 	client.init();

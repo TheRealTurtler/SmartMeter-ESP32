@@ -27,8 +27,6 @@ public:
 	void reload();
 	void update();
 
-	void setEnableUpload(bool enable) { m_enableUpload = enable; }
-
 	void setTimeoutConnect(const std::chrono::milliseconds& timeout) { m_timeoutConnect = timeout; }
 	void setTimeoutHandshake(const std::chrono::milliseconds& timeout) { m_timeoutHandshake = timeout; }
 	void setTimeoutReply(const std::chrono::milliseconds& timeout) { m_timeoutReply = timeout; }
@@ -51,7 +49,6 @@ private:
 
 	Settings m_settings;
 
-	bool m_enableUpload = false;
 	uint16_t m_batchCounter = 0;
 
 	std::chrono::steady_clock::time_point m_timeLast;

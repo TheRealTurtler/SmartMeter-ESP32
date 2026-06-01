@@ -51,10 +51,6 @@ void HttpClient::reload()
 	{
 		m_mapDataSmartMeter.clear();
 		m_mapDataSystem.clear();
-
-		// If WiFi was disabled before, it has to be enabled now
-		if (enableWifi)
-			Networking::getInstance()->setEnableWifi(true);
 	}
 
 	if (m_clientSecure)
@@ -79,7 +75,7 @@ void HttpClient::update()
 
 	Networking* const net = Networking::getInstance();
 
-	if (m_settings.disbaleWifi)
+	if (m_batchCounter >= m_settings.batchSize)
 	{
 		if (!net->getEnableWifi())
 			net->setEnableWifi(true);
@@ -87,8 +83,9 @@ void HttpClient::update()
 
 	if (!m_settings.enable
 		|| m_settings.serverHost == ""
-		|| !m_enableUpload
-		|| m_batchCounter < m_settings.batchSize)
+		|| m_batchCounter < m_settings.batchSize
+		|| !net->getEnableWifi()
+		|| !net->isWifiConnected())
 	{
 		m_delayNext = m_delayRetry;
 		m_timeLast = timeNow;

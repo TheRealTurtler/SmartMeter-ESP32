@@ -4,6 +4,9 @@
 #include "config/config_system.hpp"
 
 
+const auto WIFI_DELAY_OFF_AFTER_START = std::chrono::minutes(5);		// default: 5min
+
+
 Networking* Networking::m_instance = nullptr;
 
 
@@ -291,6 +294,7 @@ void Networking::updateWifi()
 void Networking::updateWifiStation()
 {
 	const wl_status_t wifiState = WiFi.status();
+	const wifi_mode_t wifiMode = WiFi.getMode();
 
 	if (wifiState == WL_CONNECTED)
 	{
@@ -305,26 +309,27 @@ void Networking::updateWifiStation()
 	}
 	else
 	{
-		if (wifiState != m_wifiStateLast)
+		if (wifiState != m_wifiStateLast && m_wifiStateLast == WL_CONNECTED)
 			onDisconnect();
 
-		WiFi.reconnect();
+		if (wifiMode != WIFI_OFF)
+			WiFi.reconnect();
 	}
 
 	m_wifiStateLast = wifiState;
 
-	if (WiFi.getMode() == WIFI_OFF && m_enableWifi)
+	if (wifiMode == WIFI_OFF && m_enableWifi)
 	{
 		log_i("=== Enabling WiFi...");
 		WiFi.begin();
 	}
-	else if (WiFi.getMode() != WIFI_OFF && !m_enableWifi)
+	else if (wifiMode != WIFI_OFF && !m_enableWifi)
 	{
 		const auto timeNow = std::chrono::steady_clock::now();
 
-		// Wait at least 5min after startup and first connect to disable WiFi again
+		// Wait some time after startup and first connect to disable WiFi again
 		// -> This way settings can always be changed after a restart without completely resetting
-		if (m_timeFirstConnect != std::chrono::steady_clock::time_point() && timeNow - m_timeFirstConnect >= std::chrono::minutes(5))
+		if (m_timeFirstConnect != std::chrono::steady_clock::time_point() && timeNow - m_timeFirstConnect >= WIFI_DELAY_OFF_AFTER_START)
 		{
 			// Wait for NTP sync before turning off
 			if (checkNtp())
