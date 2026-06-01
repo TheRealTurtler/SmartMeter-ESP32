@@ -11,7 +11,7 @@
 class HttpClient
 {
 public:
-	HttpClient(const HttpAPI& api, DataCollector& dc);
+	HttpClient(const HttpAPI& api);
 
 	struct Settings
 	{
@@ -35,6 +35,9 @@ public:
 
 	void setDelayRequest(const std::chrono::milliseconds& delay) { m_delayRequest = delay; }
 	void setDelayRetry(const std::chrono::milliseconds& delay) { m_delayRetry = delay; }
+
+	void callbackSmartmeter(const std::chrono::system_clock::time_point& tp, const DataSmartMeter& data);
+	void callbackSystem(const std::chrono::system_clock::time_point& tp, const DataSystem& data);
 
 	static Settings loadSettings();
 	static void saveSettings(const Settings& settings);
@@ -63,9 +66,6 @@ private:
 
 	std::map<std::chrono::system_clock::time_point, DataSmartMeter> m_mapDataSmartMeter;
 	std::map<std::chrono::system_clock::time_point, DataSystem> m_mapDataSystem;
-
-	void callbackSmartmeter(const std::chrono::system_clock::time_point& tp, const DataSmartMeter& data);
-	void callbackSystem(const std::chrono::system_clock::time_point& tp, const DataSystem& data);
 
 	int8_t uploadSmartMeter();
 	int8_t uploadSystem();

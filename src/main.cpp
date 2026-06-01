@@ -26,7 +26,7 @@ DataCollector dc(std::chrono::minutes(5));
 SMLReader sml(&dc, Serial1, PIN_RX, PIN_TX);
 
 HttpAPI api;
-HttpClient client(api, dc);
+HttpClient client(api);
 HttpServer server(api, dc, 80);
 
 
@@ -126,11 +126,13 @@ void setup()
 	net->addCallbackConnect([]() { client.setEnableUpload(true); });
 	net->addCallbackDisconnect([]() { client.setEnableUpload(false); });
 
-	client.init();
 	const auto timeoutClient = ((wd.getTimeout() - std::chrono::seconds(1)) / 3);
+	client.init();
 	client.setTimeoutConnect(timeoutClient);
 	client.setTimeoutHandshake(timeoutClient);
 	client.setTimeoutReply(timeoutClient);
+	dc.setCallbackSmartmeter([](const std::chrono::system_clock::time_point& tp, const DataSmartMeter& data) { client.callbackSmartmeter(tp, data); });
+	dc.setCallbackSystem([](const std::chrono::system_clock::time_point& tp, const DataSystem& data) { client.callbackSystem(tp, data); });
 
 	server.init();
 	server.addCallbackSettings([net]() { net->reload(); });

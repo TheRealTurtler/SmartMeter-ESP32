@@ -31,12 +31,12 @@ ArduinoJson::JsonDocument HttpAPI::buildJsonSmartmeter(const std::chrono::system
 {
 	ArduinoJson::JsonDocument doc;
 
+	const auto millisDataset = std::chrono::duration_cast<std::chrono::milliseconds>(tp.time_since_epoch());
+	doc["time_dataset"] = millisDataset.count();
+
 	if (data.timeLastUpdate != std::chrono::steady_clock::time_point())
 	{
-		const auto millisDataset = std::chrono::duration_cast<std::chrono::milliseconds>(tp.time_since_epoch());
-
 		doc["status"] = "ok";
-		doc["time_dataset"] = millisDataset.count();
 
 		const auto timeNowSteady = std::chrono::steady_clock::now();
 		const auto timeNowSystem = std::chrono::system_clock::now();
