@@ -88,6 +88,11 @@ void DataCollector::resetAverage()
 	{
 		value.resetAverage();
 	}
+
+	for (auto& [dp, value] : m_dataSystem.mapData)
+	{
+		value.resetAverage();
+	}
 }
 
 std::chrono::system_clock::time_point DataCollector::roundTimePoint(const std::chrono::system_clock::time_point& tp) const
