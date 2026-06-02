@@ -24,12 +24,10 @@ void HttpClient::init()
 void HttpClient::reload()
 {
 	const Settings settings = loadSettings();
-
-	bool enableWifi = (m_settings.enable && m_settings.disbaleWifi);
+	Networking* net = Networking::getInstance();
 
 	if (validateSettings(settings))
 	{
-
 		m_settings = settings;
 	}
 	else
@@ -39,16 +37,17 @@ void HttpClient::reload()
 		m_settings.serverLocationSmartMeter = "";
 		m_settings.serverLocationSystem = "";
 		m_settings.batchSize = 1;
-		m_settings.disbaleWifi = false;
+		m_settings.disableWifi = false;
 	}
 
 	if (m_settings.enable)
 	{
-		if (m_settings.disbaleWifi)
-			Networking::getInstance()->setEnableWifi(false);
+		net->setEnableWifi(!m_settings.disableWifi);
 	}
 	else
 	{
+		net->setEnableWifi(true);
+
 		m_mapDataSmartMeter.clear();
 		m_mapDataSystem.clear();
 	}
@@ -71,7 +70,13 @@ void HttpClient::update()
 	if (timeDiff < m_delayNext)
 		return;
 
-	m_batchCounter = std::max({ m_mapDataSmartMeter.size(), m_mapDataSystem.size() });
+	if (!m_settings.enable
+		|| m_settings.serverHost == "")
+	{
+		m_delayNext = m_delayRetry;
+		m_timeLast = timeNow;
+		return;
+	}
 
 	Networking* const net = Networking::getInstance();
 
@@ -81,10 +86,7 @@ void HttpClient::update()
 			net->setEnableWifi(true);
 	}
 
-	if (!m_settings.enable
-		|| m_settings.serverHost == ""
-		|| m_batchCounter < m_settings.batchSize
-		|| !net->getEnableWifi()
+	if (m_batchCounter < m_settings.batchSize
 		|| !net->isWifiConnected())
 	{
 		m_delayNext = m_delayRetry;
@@ -124,7 +126,7 @@ void HttpClient::update()
 	// Only reset batch count when all data is transmitted
 	m_batchCounter = 0;
 
-	if (m_settings.disbaleWifi)
+	if (m_settings.disableWifi)
 	{
 		if (net->getEnableWifi())
 			net->setEnableWifi(false);
@@ -147,7 +149,7 @@ HttpClient::Settings HttpClient::loadSettings()
 	settings.batchSize = std::strtol(cfg.getConfig(Config_PushAPI::BATCH_SIZE).c_str(), nullptr, 10);
 	settings.batchSize = (errno == 0 ? settings.batchSize : 0);
 
-	settings.disbaleWifi = (cfg.getConfig(Config_PushAPI::DISABLE_WIFI) == "true");
+	settings.disableWifi = (cfg.getConfig(Config_PushAPI::DISABLE_WIFI) == "true");
 
 	return settings;
 }
@@ -161,7 +163,7 @@ void HttpClient::saveSettings(const Settings& settings)
 	cfg.setConfig(Config_PushAPI::SERVER_PATH_SMARTMETER, settings.serverLocationSmartMeter);
 	cfg.setConfig(Config_PushAPI::SERVER_PATH_SYSTEM, settings.serverLocationSystem);
 	cfg.setConfig(Config_PushAPI::BATCH_SIZE, std::to_string(settings.batchSize));
-	cfg.setConfig(Config_PushAPI::DISABLE_WIFI, (settings.disbaleWifi ? "true" : "false"));
+	cfg.setConfig(Config_PushAPI::DISABLE_WIFI, (settings.disableWifi ? "true" : "false"));
 }
 
 bool HttpClient::validateSettings(const Settings& settings)
@@ -207,6 +209,7 @@ void HttpClient::callbackSmartmeter(const std::chrono::system_clock::time_point&
 	}
 
 	m_mapDataSmartMeter[tp] = data;
+	m_batchCounter = std::max({ m_mapDataSmartMeter.size(), m_mapDataSystem.size() });
 }
 
 void HttpClient::callbackSystem(const std::chrono::system_clock::time_point& tp, const DataSystem& data)
@@ -227,6 +230,7 @@ void HttpClient::callbackSystem(const std::chrono::system_clock::time_point& tp,
 	}
 
 	m_mapDataSystem[tp] = data;
+	m_batchCounter = std::max({ m_mapDataSmartMeter.size(), m_mapDataSystem.size() });
 }
 
 int8_t HttpClient::uploadSmartMeter()
@@ -245,8 +249,8 @@ int8_t HttpClient::uploadSmartMeter()
 
 		if (uploadJson(url, doc))
 		{
-			result = 1;
 			m_mapDataSmartMeter.erase(it);
+			result = 1;
 		}
 		else
 			result = -1;

@@ -20,7 +20,7 @@ public:
 		std::string serverLocationSmartMeter = "";
 		std::string serverLocationSystem = "";
 		uint16_t batchSize = 1;
-		bool disbaleWifi = false;
+		bool disableWifi = false;
 	};
 
 	void init();
