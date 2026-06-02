@@ -50,6 +50,9 @@ ArduinoJson::JsonDocument HttpAPI::buildJsonSmartmeter(const std::chrono::system
 
 		for (const auto& [dp, mv] : data.mapData)
 		{
+			if (mv.getSampleCount() == 0)
+				continue;
+
 			if (gc_mapDataPointInfoSmartmeter.contains(dp))
 			{
 				const std::string& key = gc_mapDataPointInfoSmartmeter.at(dp);
@@ -92,6 +95,9 @@ ArduinoJson::JsonDocument HttpAPI::buildJsonSystem(const std::chrono::system_clo
 
 	for (const auto& [dp, mv] : data.mapData)
 	{
+		if (mv.getSampleCount() == 0)
+			continue;
+
 		if (gc_mapDataPointInfoSystem.contains(dp))
 		{
 			const std::string& key = gc_mapDataPointInfoSystem.at(dp);

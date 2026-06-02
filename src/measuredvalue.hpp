@@ -17,12 +17,17 @@ public:
 	void updateValue(const double& newValue, bool calcAverage = true)
 	{
 		m_valueNow = newValue;
-		++m_sampleCount;
 
 		if (calcAverage)
+		{
+			++m_sampleCount;
 			m_valueAverage += (newValue - m_valueAverage) / m_sampleCount;
+		}
 		else
+		{
+			m_sampleCount = 1;
 			m_valueAverage = newValue;
+		}
 	}
 
 	void resetAverage()
