@@ -17,6 +17,8 @@ public:
 	void stop();
 	void update();
 
+	bool isRunning() const { return m_isRunning; }
+
 	typedef std::function<void(void)> func_cb_settings;
 
 	void addCallbackSettings(const func_cb_settings& func);
@@ -26,6 +28,8 @@ private:
 	const DataCollector& m_dc;
 
 	WebServer m_server;
+
+	bool m_isRunning = false;
 
 	bool m_triggerSettingsCallbacks = false;
 	std::vector<func_cb_settings> m_vecFuncSettings;

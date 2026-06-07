@@ -45,6 +45,10 @@ public:
 	bool getEnableWifi() const { return m_enableWifi; }
 	void setEnableWifi(bool enable) { m_enableWifi = enable; }
 
+	bool getEnableDfs() const { return m_enableDfs; }
+	void enableDfs(const uint32_t& cpuFreqMin = 40, const uint32_t& cpuFreqMax = 160);
+	void disableDfs();
+
 	typedef std::function<void(void)> func_cb_connect;
 	typedef std::function<void(void)> func_cb_disconnect;
 
@@ -86,10 +90,14 @@ private:
 	bool m_configured = false;
 	bool m_started = false;
 	bool m_enableWifi = true;
+	bool m_enableDfs = false;
 
 	std::chrono::steady_clock::time_point m_timeFirstConnect;
 	std::chrono::steady_clock::time_point m_timeLastSyncNtp;
 	std::chrono::hours m_intervalSyncNtp;
+
+	uint32_t m_cpuFreqMin = 0;
+	uint32_t m_cpuFreqMax = 0;
 
 	void updateWifi();
 	void updateWifiStation();

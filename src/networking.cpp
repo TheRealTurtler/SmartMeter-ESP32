@@ -244,12 +244,16 @@ void Networking::reload()
 		m_configured = true;
 
 		WiFi.mode(WIFI_MODE_STA);
+		WiFi.setSleep(true);
 
 		// Apply settings
 		if (settings.mode == "static")
 		{
 			WiFi.config(settings.ip.c_str(), settings.gateway.c_str(), settings.subnet.c_str(), settings.dns_1.c_str(), settings.dns_2.c_str());
 		}
+
+		if (m_enableDfs)
+			setCpuFrequencyMhz(m_cpuFreqMax);
 
 		WiFi.setHostname(settings.hostname.c_str());
 		WiFi.begin(settings.ssid.c_str(), settings.password.c_str());
@@ -321,6 +325,10 @@ void Networking::updateWifiStation()
 	if (wifiMode == WIFI_OFF && m_enableWifi)
 	{
 		log_i("=== Enabling WiFi...");
+
+		if (m_enableDfs)
+			setCpuFrequencyMhz(m_cpuFreqMax);
+
 		WiFi.begin();
 	}
 	else if (wifiMode != WIFI_OFF && !m_enableWifi)
@@ -338,6 +346,9 @@ void Networking::updateWifiStation()
 
 				WiFi.disconnect(true);
 				WiFi.mode(WIFI_OFF);
+
+				if (m_enableDfs)
+					setCpuFrequencyMhz(m_cpuFreqMin);
 			}
 		}
 	}
@@ -378,6 +389,18 @@ void Networking::syncNtp()
 	{
 		log_w("NTP Sync failed!");
 	}
+}
+
+void Networking::enableDfs(const uint32_t& cpuFreqMin, const uint32_t& cpuFreqMax)
+{
+	m_enableDfs = true;
+	m_cpuFreqMin = cpuFreqMin;
+	m_cpuFreqMax = cpuFreqMax;
+}
+
+void Networking::disableDfs()
+{
+	m_enableDfs = false;
 }
 
 void Networking::onConnect()

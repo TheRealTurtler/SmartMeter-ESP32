@@ -33,6 +33,7 @@ void HttpServer::start()
 	log_i("Starting HTTP Server...");
 
 	m_server.begin();
+	m_isRunning = true;
 }
 
 void HttpServer::stop()
@@ -40,6 +41,7 @@ void HttpServer::stop()
 	log_i("Stopping HTTP Server...");
 
 	m_server.stop();
+	m_isRunning = false;
 }
 
 void HttpServer::update()

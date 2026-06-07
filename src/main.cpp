@@ -11,6 +11,7 @@
 #include "reset.hpp"
 #include "networking.hpp"
 
+
 constexpr uint8_t PIN_LED_BUILTIN = BUILTIN_LED;		// Pin 8
 constexpr uint8_t PIN_LED = 6;
 constexpr uint8_t PIN_RX = 20;
@@ -117,12 +118,19 @@ void setup()
 	api.init();
 
 	Networking* const net = Networking::init();
+	net->enableDfs(40, 160);		// Reduce CPU Frequency when WiFi is not active
 	net->addCallbackConnect([]() { hb.pattern(Heartbeat::FAST_1, 3); });
 	net->addCallbackApStart([]() { hb.pattern(Heartbeat::FAST_1, 3); });
 	net->addCallbackConnect([]() { server.start(); });
 	net->addCallbackApStart([]() { server.start(); });
 	net->addCallbackDisconnect([]() { server.stop(); });
 	net->addCallbackApStop([]() { server.stop(); });
+
+	pinMode(PIN_LED_BUILTIN, OUTPUT);
+	digitalWrite(PIN_LED_BUILTIN, HIGH);	// Off
+
+	net->addCallbackConnect([]() { digitalWrite(PIN_LED_BUILTIN, LOW); });
+	net->addCallbackDisconnect([]() { digitalWrite(PIN_LED_BUILTIN, HIGH); });
 
 	const auto timeoutClient = ((wd.getTimeout() - std::chrono::seconds(1)) / 3);
 	client.init();
@@ -173,4 +181,8 @@ void loop()
 	api.update();		// HTTP API for Server and Client
 	client.update();	// HTTP Client
 	server.update(); 	// HTTP Server
+
+	// Reduce CPU load when HTTP Server is not running to save power
+	if (!server.isRunning())
+		delay(100);
 }
